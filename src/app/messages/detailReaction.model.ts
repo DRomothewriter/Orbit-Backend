@@ -6,9 +6,15 @@ const detailReactionsSchema = new mongoose.Schema({
         ref:'Message'
     },
     reactions: [{
-        type: String,
-        userId: mongoose.Schema.Types.ObjectId,
-        ref:'User'
+        emojiCode: {
+            type: String,
+            required: true
+        },
+        userId:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref:'User',
+            required: true
+        } 
     }]
 })
 
