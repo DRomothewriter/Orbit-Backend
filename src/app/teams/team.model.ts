@@ -12,10 +12,6 @@ const teamSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Group'
     }],
-    teamatesIds:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }]
 });
 
 const Team = mongoose.model('Team', teamSchema);
