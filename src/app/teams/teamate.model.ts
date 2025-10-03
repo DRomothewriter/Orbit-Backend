@@ -1,22 +1,22 @@
-import mongoose from "mongoose";
+import { model, Schema, SchemaTypes } from 'mongoose';
 
-const teamateSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    teamId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Team',
-        required: true
-    },
-    role: {
-        type: String,
-        enum: ['admin', 'member'],
-        required: true
-    }
+const teamateSchema = new Schema({
+	userId: {
+		type: SchemaTypes.ObjectId,
+		ref: 'User',
+		required: true,
+	},
+	teamId: {
+		type: SchemaTypes.ObjectId,
+		ref: 'Team',
+		required: true,
+	},
+	role: {
+		type: SchemaTypes.String,
+		enum: ['admin', 'member'],
+		required: true,
+	},
 });
 
-const Teamate = mongoose.model('Teamate', teamateSchema);
+const Teamate = model('Teamate', teamateSchema);
 export default Teamate;

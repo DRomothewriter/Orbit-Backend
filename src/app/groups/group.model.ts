@@ -1,24 +1,24 @@
-import mongoose from 'mongoose';
+import { model, Schema, SchemaTypes} from 'mongoose';
 
-const groupSchema = new mongoose.Schema(
+const groupSchema = new Schema(
 	{
 		topic: {
-			type: String,
+			type: SchemaTypes.String,
 			require: true,
 		},
 		lastMessage: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 			ref: 'Message' //Message
 		},
 		listIds: {
 			type: null, //[List]
 		},
 		groupImgUrl: {
-			type: String,
+			type: SchemaTypes.String,
 		},
 	},
 	{ timestamps: true }
 );
 
-const Group = mongoose.model('Group', groupSchema);
+const Group = model('Group', groupSchema);
 export default Group;

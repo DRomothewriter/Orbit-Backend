@@ -1,13 +1,13 @@
-import mongoose from "mongoose";
+import { model, Schema, SchemaTypes } from 'mongoose';
 
-const listSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    description:{
-        type: String
-    }
+const listSchema = new Schema({
+	title: {
+		type: SchemaTypes.String,
+		required: true,
+	},
+	description: {
+		type: SchemaTypes.String,
+	},
 });
-const Lists = mongoose.model('Lists', listSchema);
+const Lists = model('Lists', listSchema);
 export default Lists;
