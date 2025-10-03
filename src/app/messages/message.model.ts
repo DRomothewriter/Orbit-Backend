@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
+import { model, SchemaTypes, Schema} from 'mongoose';
 
-const messageSchema = new mongoose.Schema(
+const messageSchema = new Schema(
 	{
 		type: {
-			type: String,
+			type: SchemaTypes.String,
 			enum: ['text', 'image', 'voice', 'video', 'emoji', 'multimedia'],
 			required: true,
 		},
@@ -12,18 +12,18 @@ const messageSchema = new mongoose.Schema(
 			required: true,
 		},
 		groupId: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 			required: true,
 		},
 		userId: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 			required: true,
 		},
 		detailReactions: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 		},
 	},
 	{ timestamps: true }
 );
-const Message = mongoose.model('Message', messageSchema);
+const Message = model('Message', messageSchema);
 export default Message;

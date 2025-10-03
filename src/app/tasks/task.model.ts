@@ -1,26 +1,28 @@
-import mongoose from "mongoose";
 
-const taskSchema = new mongoose.Schema({
+import {model, Schema, SchemaTypes} from "mongoose";
+
+const taskSchema = new Schema({
     listId:{
-        type: mongoose.Schema.Types.ObjectId,
+        type: SchemaTypes.ObjectId,
         ref: 'List',
         required: true
     },
     taskTitle:{
-        type: String,
+        type: SchemaTypes.String,
         required: true
     },
     responsable:[{
-        type: mongoose.Schema.Types.ObjectId,
+        type: SchemaTypes.ObjectId,
         ref: 'User'
     }],
     duedate:{
-        type: Date,
+        type: SchemaTypes.Date,
     },
     index: {
-        type: Number
+        type: SchemaTypes.Number
     }
 });
 
-const Task = mongoose.model('Task', taskSchema);
+const Task = model('Task', taskSchema);
+
 export default Task;

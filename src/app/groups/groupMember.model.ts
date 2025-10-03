@@ -1,17 +1,17 @@
-import mongoose from 'mongoose';
+import { model, Schema, SchemaTypes} from 'mongoose';
 
-const groupMemberSchema = new mongoose.Schema(
+const groupMemberSchema = new Schema(
 	{
 		userId: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 			required: true,
 		},
 		groupId: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: SchemaTypes.ObjectId,
 			required: true,
 		},
 		role: {
-			type: String,
+			type: SchemaTypes.String,
 			enum: ['admin', 'member'],
 			required: true,
 		},
@@ -19,5 +19,5 @@ const groupMemberSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-const GroupMember = mongoose.model('GroupMember', groupMemberSchema);
+const GroupMember = model('GroupMember', groupMemberSchema);
 export default GroupMember;

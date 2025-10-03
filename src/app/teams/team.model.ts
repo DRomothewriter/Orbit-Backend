@@ -1,18 +1,22 @@
-import mongoose from "mongoose";
 
-const teamSchema = new mongoose.Schema({
-    teamName:{
-        type: String,
-        required: true
-    },
-    teamImgUrl:{
-        type: String
-    },
-    groupsIds:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Group'
-    }],
+import { model, Schema, SchemaTypes } from 'mongoose';
+
+const teamSchema = new Schema({
+	teamName: {
+		type: SchemaTypes.String,
+		required: true,
+	},
+	teamImgUrl: {
+		type: SchemaTypes.String,
+	},
+	groupsIds: [
+		{
+			type: SchemaTypes.ObjectId,
+			ref: 'Group',
+		},
+	],
 });
 
-const Team = mongoose.model('Team', teamSchema);
-export default Team
+const Team = model('Team', teamSchema);
+export default Team;
+

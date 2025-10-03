@@ -1,22 +1,24 @@
-import mongoose from "mongoose";
+import { model, Schema, SchemaTypes } from 'mongoose';
 
-const detailReactionsSchema = new mongoose.Schema({
-    messageId:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:'Message'
-    },
-    reactions: [{
-        emojiCode: {
-            type: String,
-            required: true
-        },
-        userId:{
-            type: mongoose.Schema.Types.ObjectId,
-            ref:'User',
-            required: true
-        } 
-    }]
-})
+const detailReactionsSchema = new Schema({
+	messageId: {
+		type: SchemaTypes.ObjectId,
+		ref: 'Message',
+	},
+	reactions: [
+		{
+			emojiCode: {
+				type: SchemaTypes.String,
+				required: true,
+			},
+			userId: {
+				type: SchemaTypes.ObjectId,
+				ref: 'User',
+				required: true,
+			},
+		},
+	],
+});
 
-const DetailReactions = mongoose.model('DetailReactions', detailReactionsSchema);
+const DetailReactions = model('DetailReactions', detailReactionsSchema);
 export default DetailReactions;

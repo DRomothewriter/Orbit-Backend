@@ -1,21 +1,22 @@
-import mongoose from 'mongoose';
 
-const friendshipSchema = new mongoose.Schema({
+import { model, Schema, SchemaTypes } from 'mongoose';
+
+const friendshipSchema = new Schema({
 	userId: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User',
-		required: true
-	},
-	friendId: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: SchemaTypes.ObjectId,
 		ref: 'User',
 		required: true,
 	},
-    status: {
-        type: String,
-        enum: ['pending', 'accepted', 'blocked', 'muted'],
-		required: true
-    }
+	friendId: {
+		type: SchemaTypes.ObjectId,
+		ref: 'User',
+		required: true,
+	},
+	status: {
+		type: SchemaTypes.String,
+		enum: ['pending', 'accepted', 'blocked', 'muted'],
+		required: true,
+	},
 });
-const Friendship = mongoose.model('Friendship', friendshipSchema);
+const Friendship = model('Friendship', friendshipSchema);
 export default Friendship;
