@@ -6,15 +6,12 @@ const teamSchema = new Schema({
 		type: SchemaTypes.String,
 		required: true,
 	},
+	description: {
+		type: SchemaTypes.String
+	},
 	teamImgUrl: {
 		type: SchemaTypes.String,
-	},
-	groupsIds: [
-		{
-			type: SchemaTypes.ObjectId,
-			ref: 'Group',
-		},
-	],
+	}
 });
 
 const Team = model('Team', teamSchema);

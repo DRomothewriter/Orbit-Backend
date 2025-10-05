@@ -1,4 +1,4 @@
-import { model, SchemaTypes, Schema} from 'mongoose';
+import { model, SchemaTypes, Schema } from 'mongoose';
 
 const messageSchema = new Schema(
 	{
@@ -19,8 +19,8 @@ const messageSchema = new Schema(
 			type: SchemaTypes.ObjectId,
 			required: true,
 		},
-		detailReactions: {
-			type: SchemaTypes.ObjectId,
+		reactionCount: {
+			type: SchemaTypes.Number,
 		},
 	},
 	{ timestamps: true }

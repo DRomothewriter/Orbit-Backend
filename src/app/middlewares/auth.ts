@@ -16,14 +16,12 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     const { token } = req.query;
 
     if (token == '12345'){
-        if (req.user){
-            req.user = {
-                id: 8,
-                name: "Barraza",
-                email: "barraza@mail.cum"
-            }
+        req.user = {
+            id: 8,
+            name: "Barraza",
+            email: "barraza@mail.cum"
         }
-        return next();
+    return next();
     }
     // res.status(401).send({mensaje: 'no estás logueado.'});
     // res.status(401).send();

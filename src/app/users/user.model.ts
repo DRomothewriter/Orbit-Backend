@@ -5,6 +5,11 @@ const userSchema = new Schema({
         type: SchemaTypes.String,
         require: true
     },
+    email: {
+        type: SchemaTypes.String,
+        required: true,
+        unique: true
+    },
     password: {
         type: SchemaTypes.String,
         required: true,
