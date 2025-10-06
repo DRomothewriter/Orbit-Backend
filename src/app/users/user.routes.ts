@@ -4,10 +4,28 @@ import { authMiddleware } from './../middlewares/auth';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /users/user:
+ *   get:
+ *     description: Listar usuarios
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         description: auth user token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: success
+ *       400:
+ *         description: missing token
+ */
+router.get('/user', userController.getUser)
 
 /**
  * @swagger
- * /createUser:
+ * /users/createUser:
  *   post:
  *     description: Crear un nuevo usuario
  *     requestBody:
@@ -29,28 +47,10 @@ const router = Router();
  */
 router.post('/createUser', userController.createUser)
 
-/**
- * @swagger
- * /users:
- *   get:
- *     description: Listar usuarios
- *     parameters:
- *       - in: query
- *         name: token
- *         description: auth user token
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: success
- *       400:
- *         description: missing token
- */
-router.get('/user', userController.getUser)
 
 /**
  * @swagger
- * /userId:
+ * /users/userId:
  *   get:
  *     description: Obtener usuario por ID
  *     parameters:
@@ -69,7 +69,7 @@ router.get('/userId', userController.getUserById)
 
 /**
  * @swagger
- * /updateUser:
+ * /users/updateUser:
  *   put:
  *     description: Actualizar usuario
  *     requestBody:
@@ -95,7 +95,7 @@ router.put('/updateUser', userController.modifyUser)
 
 /**
  * @swagger
- * /delteUser:
+ * /users/delteUser:
  *   delete:
  *     description: Eliminar usuario
  *     parameters:
