@@ -17,8 +17,11 @@ export const createUser = async (req: Request, res: Response) => {
 }
 
 export const getUser = (req: Request, res: Response) => {
-	console.log('User: ', req.user);
-	res.send([]);
+	try {
+		return res.status(Status.SUCCESS).json({user: req.user})
+	} catch (e) {
+		return res.status(Status.UNAUTHORIZED).json({ error: 'No autenticado' });
+	}
 }
 
 export const getUserById = async (req: Request, res: Response) => {
