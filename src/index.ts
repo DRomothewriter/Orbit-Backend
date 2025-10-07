@@ -12,6 +12,7 @@ import routes from './app/routes';
 const port = process.env.PORT || 3001;
 
 const app = express();
+app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesarias
 app.use(routes);
 
 app.get('', (req, res) => {

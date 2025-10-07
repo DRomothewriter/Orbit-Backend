@@ -1,7 +1,7 @@
 import Task from "./task.model";
 
 import { Response, Request } from "express";
-import Status from "app/interfaces/Status";
+import Status from "../interfaces/Status";
 
 export const createTask = async(req: Request, res: Response) => {
     const { taskTitle, responsable, duedate, index} = req.body;

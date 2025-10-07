@@ -1,3 +1,4 @@
+// filepath: 
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as teamcontroller from './team.controller';
@@ -9,12 +10,12 @@ const router = Router();
  *   get:
  *     description: Listar los teams del usuario autenticado
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     responses:
  *       200:
  *         description: Lista de Teams
@@ -27,12 +28,12 @@ router.get('/my-teams', authMiddleware, teamcontroller.getMyTeams);
  *   get:
  *     description: Obtener información de un team por id
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true
@@ -50,12 +51,12 @@ router.get('/:teamId', authMiddleware, teamcontroller.getTeamById)
  *   post:
  *     description: Crear un nuevo equipo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -74,12 +75,12 @@ router.post('/',authMiddleware, teamcontroller.createTeam);
  *   post:
  *     description: Agregar un miembro a un equipo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -103,12 +104,12 @@ router.post('/add-teamate', authMiddleware, teamcontroller.addTeamate);
  *   put:
  *     description: Actualizar información de un equipo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -134,12 +135,12 @@ router.put('/change-team-info', authMiddleware, teamcontroller.changeTeamInfo);
  *   delete:
  *     description: Eliminar un equipo por ID
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true
@@ -157,12 +158,12 @@ router.delete('/:teamId', authMiddleware, teamcontroller.deleteTeam);
  *   delete:
  *     description: Eliminar un miembro de un equipo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true

@@ -1,3 +1,4 @@
+// filepath: 
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as groupcontroller from './group.controller';
@@ -9,12 +10,12 @@ const router = Router();
  *   get:
  *     description: Listar los grupos del usuario autenticado
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     responses:
  *        200:
  *          description: Lista de Grupos
@@ -27,12 +28,12 @@ router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
  *   get:
  *     description: Obtener información de un grupo por Id
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -50,12 +51,12 @@ router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);
  *   post:
  *     description: Crear un nuevo grupo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -74,12 +75,12 @@ router.post('/', authMiddleware, groupcontroller.createGroup);
  *   post:
  *     summary: Agregar un miembro a un grupo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -103,12 +104,12 @@ router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
  *   put:
  *     summary: Actualizar información de un grupo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -134,12 +135,12 @@ router.put('/change-group-info', authMiddleware, groupcontroller.changeGroupInfo
  *   delete:
  *     summary: Eliminar un grupo por Id
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -157,12 +158,12 @@ router.delete('/:groupId', authMiddleware, groupcontroller.deleteGroup);
  *   delete:
  *     summary: Eliminar un miembro de un grupo
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: header
+ *         name: Authorization
  *         required: true
  *         schema:
  *           type: string
- *         description: Token de autenticación
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -178,3 +179,5 @@ router.delete('/:groupId', authMiddleware, groupcontroller.deleteGroup);
  *         description: Miembro eliminado
  */
 router.delete('/:groupId/remove-member/:userId', authMiddleware, groupcontroller.deleteGroupMember);
+
+export default router;

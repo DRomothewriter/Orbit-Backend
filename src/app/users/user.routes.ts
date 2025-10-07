@@ -1,102 +1,75 @@
-import { Router } from "express";
-import  * as userController from "./user.controller";
+import { Router } from 'express';
+import * as userController from './user.controller';
 import { authMiddleware } from './../middlewares/auth';
 
 const router = Router();
 
-
 /**
  * @swagger
- * /createUser:
- *   post:
- *     description: Crear un nuevo usuario
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *     responses:
- *       201:
- *         description: Usuario creado exitosamente
- *       400:
- *         description: Error en la solicitud
- */
-router.post('/createUser', userController.createUser)
-
-/**
- * @swagger
- * /users/user:
+ * /users:
  *   get:
- *     description: Listar usuarios
+ *     description: Obtener todos los usuarios (solo id y nombre)
  *     parameters:
- *       - in: query
- *         name: token
- *         description: auth user token
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: success
- *       400:
- *         description: missing token
+ *         description: Lista de usuarios
  */
-router.get('/user', userController.getUser)
+router.get('/', userController.getAllUsers);
 
 /**
  * @swagger
- * /users/createUser:
- *   post:
- *     description: Crear un nuevo usuario
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
+ * /users/my-user:
+ *   get:
+ *     description: Obtener el usuario autenticado
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
  *     responses:
- *       201:
- *         description: Usuario creado exitosamente
- *       400:
- *         description: Error en la solicitud
+ *       200:
+ *         description: Usuario autenticado
  */
-router.post('/createUser', userController.createUser)
-
+router.get('/my-user', authMiddleware, userController.getMyUser);
 
 /**
  * @swagger
- * /users/userId:
+ * /users/{userId}:
  *   get:
  *     description: Obtener usuario por ID
  *     parameters:
- *       - in: query
- *         name: id
- *         description: ID del usuario
+ *       - in: header
+ *         name: Authorization
+ *         required: true
  *         schema:
  *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario
  *     responses:
  *       200:
  *         description: Usuario encontrado
- *       404:
- *         description: Usuario no encontrado
  */
-router.get('/userId', userController.getUserById)
+router.get('/:userId', authMiddleware, userController.getUserById);
 
 /**
  * @swagger
  * /users/updateUser:
  *   put:
  *     description: Actualizar usuario
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -104,37 +77,212 @@ router.get('/userId', userController.getUserById)
  *           schema:
  *             type: object
  *             properties:
- *               id:
+ *               userId:
  *                 type: string
- *               name:
+ *               username:
  *                 type: string
  *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               profileImgUrl:
  *                 type: string
  *     responses:
  *       200:
  *         description: Usuario actualizado
- *       400:
- *         description: Error en la solicitud
  */
-router.put('/updateUser', userController.modifyUser)
+router.put('/updateUser', authMiddleware, userController.modifyUser);
 
 /**
  * @swagger
- * /users/delteUser:
+ * /users/deleteUser/{userId}:
  *   delete:
  *     description: Eliminar usuario
  *     parameters:
- *       - in: query
- *         name: id
- *         description: ID del usuario a eliminar
+ *       - in: header
+ *         name: Authorization
+ *         required: true
  *         schema:
  *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario a eliminar
  *     responses:
  *       200:
  *         description: Usuario eliminado
- *       404:
- *         description: Usuario no encontrado
  */
-router.delete('/delteUser', userController.deleteUser)
+router.delete('/deleteUser/:userId', authMiddleware, userController.deleteUser);
+
+/**
+ * @swagger
+ * /users/friend-request:
+ *   post:
+ *     description: Enviar solicitud de amistad
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendId:
+ *                 type: string
+ *                 description: ID del usuario al que se envía la solicitud
+ *     responses:
+ *       201:
+ *         description: Solicitud enviada
+ *       409:
+ *         description: Solicitud ya enviada
+ */
+router.post('/friend-request', authMiddleware, userController.sendFriendRequest);
+
+/**
+ * @swagger
+ * /users/accept-friend:
+ *   put:
+ *     description: Aceptar solicitud de amistad
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendshipId:
+ *                 type: string
+ *                 description: ID de la solicitud de amistad
+ *     responses:
+ *       200:
+ *         description: Solicitud aceptada
+ *       404:
+ *         description: Solicitud no encontrada
+ */
+router.put('/accept-friend', authMiddleware, userController.acceptFriendRequest);
+
+/**
+ * @swagger
+ * /users/block-friend:
+ *   put:
+ *     description: Bloquear amigo
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendId:
+ *                 type: string
+ *                 description: ID del amigo a bloquear
+ *     responses:
+ *       200:
+ *         description: Amistad bloqueada
+ *       404:
+ *         description: Amistad no encontrada
+ */
+router.put('/block-friend', authMiddleware, userController.blockFriend);
+
+/**
+ * @swagger
+ * /users/mute-friend:
+ *   put:
+ *     description: Silenciar amigo
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendId:
+ *                 type: string
+ *                 description: ID del amigo a silenciar
+ *     responses:
+ *       200:
+ *         description: Amistad silenciada
+ *       404:
+ *         description: Amistad no encontrada
+ */
+router.put('/mute-friend', authMiddleware, userController.muteFriend);
+
+/**
+ * @swagger
+ * /users/friends:
+ *   get:
+ *     description: Listar amigos aceptados del usuario autenticado
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     responses:
+ *       200:
+ *         description: Lista de amigos
+ */
+router.get('/friends', authMiddleware, userController.getFriends);
+
+/**
+ * @swagger
+ * /users/delete-friendship:
+ *   delete:
+ *     description: Eliminar amistad
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT en formato "Bearer <token>"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendshipId:
+ *                 type: string
+ *                 description: ID de la amistad a eliminar
+ *     responses:
+ *       200:
+ *         description: Amistad eliminada
+ *       404:
+ *         description: Amistad no encontrada
+ */
+router.delete('/delete-friendship', authMiddleware, userController.deleteFriendship);
 
 export default router;

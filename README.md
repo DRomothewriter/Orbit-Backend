@@ -42,8 +42,8 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 - `POST /auth/signup` — Registrar usuario
 
 ### Usuarios
-- `GET /users/user` — Listar usuarios
-- `POST /users/createUser` — Crear usuario
+- `GET /users` - Listar usarios
+- `GET /users/my-user` — Mi usuario
 - `GET /users/userId` — Obtener usuario por ID
 - `PUT /users/updateUser` — Modificar usuario
 - `DELETE /users/delteUser` — Eliminar usuario
@@ -51,12 +51,31 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 ### Grupos
 - `GET /groups/my-groups` — Listar grupos del usuario
 - `GET /groups/{groupId}` — Obtener grupo por ID
-- ...
+- `POST /groups` - Crear grupo
+- `POST /groups/add-groupmember` - Añadir miembro al grupo
+- `PUT /groups/change-group-info` - Actualizar grupo
+- `DELETE /groups/{groupId}` - Borrar grupo
+- `DELETE /groups/{groupId}/remove-member/{userId}` - Borrar miembro de grupo
 
 ### Equipos
 - `GET /teams/my-teams` — Listar equipos del usuario
 - `GET /teams/{teamId}` — Obtener equipo por ID
-- ...
+- `GET /teams/my-teams` — Listar teams del usuario
+- `GET /teams/{teamId}` — Obtener team por ID
+- `POST /teams` - Crear team
+- `POST /teams/add-teamate` - Añadir miembro al team
+- `PUT /teams/change-team-info` - Actualizar team
+- `DELETE /teams/{teamId}` - Borrar team
+- `DELETE /teams/{teamId}/remove-member/{userId}` - Borrar teamate
+
+### Mensajes
+- `GET /messages/{groupId}?page=1` — Listar mensajes de un grupo (paginados, incluye reacciones)
+- `GET /messages/{messageId}` — Obtener mensaje por ID
+- `POST /messages` — Crear un nuevo mensaje
+- `PUT /messages/{messageId}` — Actualizar un mensaje
+- `DELETE /messages/{messageId}` — Eliminar un mensaje
+- `POST /messages/reaction` — Crear una reacción para un mensaje
+- `DELETE /messages/reaction/{reactionId}` — Eliminar una reacción de un mensaje
 
 ### Tareas
 - `POST /tasks` — Crear tarea

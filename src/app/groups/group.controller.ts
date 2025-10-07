@@ -7,13 +7,14 @@ import Status from '../interfaces/Status';
 export const getMyGroups = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
+		console.log("here")
+
 		const groupMembers = await GroupMember.find({ userId: userId });
 		const groupIds = groupMembers.map((gM) => gM.userId);
 		const allMyGroups = await Group.find({ _id: { $in: groupIds } });
 
         const myTeamGroups = allMyGroups.filter((g) => g.teamId);
         const myGroups = allMyGroups.filter((g)=> !g.teamId);
-
 		return res.status(Status.SUCCESS).json({ myGroups: myGroups, myTeamGroups: myTeamGroups });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });

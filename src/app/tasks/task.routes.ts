@@ -1,6 +1,7 @@
+// filepath: [task.routes.ts](http://_vscodecontentref_/0)
 import { Router } from "express";
 import * as taskController from "./task.controller"
-
+import { authMiddleware } from "../middlewares/auth";
 const router = Router();
 
 /**
@@ -8,6 +9,13 @@ const router = Router();
  * /tasks:
  *   post:
  *     description: Crear una nueva tarea
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -25,7 +33,7 @@ const router = Router();
  *       400:
  *         description: Error en la solicitud
  */
-router.post("/", taskController.createTask);
+router.post("/", authMiddleware, taskController.createTask);
 
 /**
  * @swagger
@@ -33,6 +41,12 @@ router.post("/", taskController.createTask);
  *   get:
  *     description: Obtener una tarea por su ID
  *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: taskId
  *         required: true
@@ -45,13 +59,20 @@ router.post("/", taskController.createTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.get("/:taskId", taskController.viewTaskById)
+router.get("/:taskId", authMiddleware, taskController.viewTaskById)
 
 /**
  * @swagger
  * /tasks/modifyTask:
  *   put:
  *     description: Modificar una tarea existente
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +92,7 @@ router.get("/:taskId", taskController.viewTaskById)
  *       400:
  *         description: Error en la solicitud
  */
-router.put("/modifyTask", taskController.modifyTask);
+router.put("/modifyTask", authMiddleware, taskController.modifyTask);
 
 /**
  * @swagger
@@ -79,6 +100,12 @@ router.put("/modifyTask", taskController.modifyTask);
  *   delete:
  *     description: Eliminar una tarea por su ID
  *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: taskId
  *         required: true
@@ -91,4 +118,6 @@ router.put("/modifyTask", taskController.modifyTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.delete("/:taskId", taskController.deleteTask);
+router.delete("/:taskId", authMiddleware, taskController.deleteTask);
+
+export default router;
