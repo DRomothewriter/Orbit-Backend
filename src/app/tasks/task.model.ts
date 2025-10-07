@@ -7,6 +7,10 @@ const taskSchema = new Schema({
         ref: 'List',
         required: true
     },
+    taskId: {
+        type: SchemaTypes.ObjectId,
+        required: true
+    },
     taskTitle:{
         type: SchemaTypes.String,
         required: true

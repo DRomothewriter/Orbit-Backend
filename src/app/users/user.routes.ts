@@ -31,7 +31,7 @@ router.post('/createUser', userController.createUser)
 
 /**
  * @swagger
- * /users:
+ * /users/user:
  *   get:
  *     description: Listar usuarios
  *     parameters:
@@ -50,7 +50,32 @@ router.get('/user', userController.getUser)
 
 /**
  * @swagger
- * /userId:
+ * /users/createUser:
+ *   post:
+ *     description: Crear un nuevo usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario creado exitosamente
+ *       400:
+ *         description: Error en la solicitud
+ */
+router.post('/createUser', userController.createUser)
+
+
+/**
+ * @swagger
+ * /users/userId:
  *   get:
  *     description: Obtener usuario por ID
  *     parameters:
@@ -69,7 +94,7 @@ router.get('/userId', userController.getUserById)
 
 /**
  * @swagger
- * /updateUser:
+ * /users/updateUser:
  *   put:
  *     description: Actualizar usuario
  *     requestBody:
@@ -95,7 +120,7 @@ router.put('/updateUser', userController.modifyUser)
 
 /**
  * @swagger
- * /delteUser:
+ * /users/delteUser:
  *   delete:
  *     description: Eliminar usuario
  *     parameters:
