@@ -4,6 +4,31 @@ import { authMiddleware } from './../middlewares/auth';
 
 const router = Router();
 
+
+/**
+ * @swagger
+ * /createUser:
+ *   post:
+ *     description: Crear un nuevo usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario creado exitosamente
+ *       400:
+ *         description: Error en la solicitud
+ */
+router.post('/createUser', userController.createUser)
+
 /**
  * @swagger
  * /users/user:
