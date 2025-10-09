@@ -9,7 +9,7 @@ const router = Router();
  * /users:
  *   get:
  *     description: Obtener todos los usuarios (solo id y nombre)
- *     parameters:
+ *     security: []
  *     responses:
  *       200:
  *         description: Lista de usuarios
@@ -21,13 +21,6 @@ router.get('/', userController.getAllUsers);
  * /users/my-user:
  *   get:
  *     description: Obtener el usuario autenticado
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     responses:
  *       200:
  *         description: Usuario autenticado
@@ -40,12 +33,6 @@ router.get('/my-user', authMiddleware, userController.getMyUser);
  *   get:
  *     description: Obtener usuario por ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *       - in: path
  *         name: userId
  *         required: true
@@ -64,12 +51,6 @@ router.get('/:userId', authMiddleware, userController.getUserById);
  *   put:
  *     description: Actualizar usuario
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -99,12 +80,6 @@ router.put('/updateUser', authMiddleware, userController.modifyUser);
  *   delete:
  *     description: Eliminar usuario
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *       - in: path
  *         name: userId
  *         required: true
@@ -122,13 +97,6 @@ router.delete('/deleteUser/:userId', authMiddleware, userController.deleteUser);
  * /users/friend-request:
  *   post:
  *     description: Enviar solicitud de amistad
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -152,13 +120,6 @@ router.post('/friend-request', authMiddleware, userController.sendFriendRequest)
  * /users/accept-friend:
  *   put:
  *     description: Aceptar solicitud de amistad
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -182,13 +143,6 @@ router.put('/accept-friend', authMiddleware, userController.acceptFriendRequest)
  * /users/block-friend:
  *   put:
  *     description: Bloquear amigo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -212,13 +166,6 @@ router.put('/block-friend', authMiddleware, userController.blockFriend);
  * /users/mute-friend:
  *   put:
  *     description: Silenciar amigo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -242,13 +189,6 @@ router.put('/mute-friend', authMiddleware, userController.muteFriend);
  * /users/friends:
  *   get:
  *     description: Listar amigos aceptados del usuario autenticado
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     responses:
  *       200:
  *         description: Lista de amigos
@@ -257,16 +197,22 @@ router.get('/friends', authMiddleware, userController.getFriends);
 
 /**
  * @swagger
+ * /users/received-requests:
+ *   get:
+ *     description: Listar solicitudes de amistad recibidas
+ *     responses:
+ *       200:
+ *         description: Lista de solicitudes de amistad
+ *       204:
+ *         description: No tiene solicitudes
+ */
+router.get('/received-requests', authMiddleware, userController.getReceivedRequests);
+
+/**
+ * @swagger
  * /users/delete-friendship:
  *   delete:
  *     description: Eliminar amistad
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token JWT en formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:

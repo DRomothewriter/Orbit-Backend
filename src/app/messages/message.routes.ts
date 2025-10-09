@@ -1,4 +1,3 @@
-// filepath: [message.routes.ts](http://_vscodecontentref_/0)
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as messageController from './message.controller';
@@ -11,12 +10,6 @@ const router = Router();
  *   get:
  *     description: Obtener mensajes de un grupo (paginados)
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -41,12 +34,6 @@ router.get('/:groupId', authMiddleware, messageController.getGroupMessages);
  *   get:
  *     description: Obtener un mensaje por ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: messageId
  *         required: true
@@ -64,13 +51,6 @@ router.get('/:messageId', authMiddleware, messageController.getMessageById);
  * /messages:
  *   post:
  *     description: Crear un nuevo mensaje
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -95,13 +75,6 @@ router.post('/', authMiddleware, messageController.createMessage);
  * /messages/reaction:
  *   post:
  *     description: Crear una reacción para un mensaje
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -125,12 +98,6 @@ router.post('/reaction', authMiddleware, messageController.createReaction);
  *   put:
  *     description: Actualizar un mensaje
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: messageId
  *         required: true
@@ -160,12 +127,6 @@ router.put('/:messageId', authMiddleware, messageController.updateMessage);
  *   delete:
  *     description: Eliminar un mensaje por ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: messageId
  *         required: true
@@ -184,12 +145,6 @@ router.delete('/:messageId', authMiddleware, messageController.deleteMessage);
  *   delete:
  *     description: Eliminar una reacción de un mensaje
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: reactionId
  *         required: true

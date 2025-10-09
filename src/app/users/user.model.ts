@@ -3,7 +3,7 @@ import { model, Schema, SchemaTypes} from "mongoose";
 const userSchema = new Schema({
     username: {
         type: SchemaTypes.String,
-        require: true
+        required: true
     },
     email: {
         type: SchemaTypes.String,
@@ -12,8 +12,7 @@ const userSchema = new Schema({
     },
     password: {
         type: SchemaTypes.String,
-        required: true,
-        select: false
+        required: true
     },
     profileImgUrl: {
         type: SchemaTypes.String

@@ -1,8 +1,7 @@
-
 import { model, Schema, SchemaTypes } from 'mongoose';
 
 const notificationSchema = new Schema({
-	userId: {
+	receiverId: {
 		type: SchemaTypes.ObjectId,
 		ref: 'User',
 		required: true,
@@ -15,7 +14,7 @@ const notificationSchema = new Schema({
 	seen: {
 		type: SchemaTypes.Boolean,
 	},
-});
+},{timestamps: true});
 
 const Notification = model('Notification', notificationSchema);
 export default Notification;

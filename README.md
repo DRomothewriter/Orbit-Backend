@@ -24,6 +24,7 @@ Orbit es una aplicación backend desarrollada en TypeScript que implementa un si
 	```env
 	PORT=3001
 	MONGO_URI=tu_mongo_uri
+	JWT_SECRET=tu_palabra_clave
 	```
 4. Inicia el servidor en modo desarrollo:
 	```bash
@@ -31,7 +32,7 @@ Orbit es una aplicación backend desarrollada en TypeScript que implementa un si
 	```
 
 ## Uso
-El servidor se ejecutará por defecto en `http://localhost:3001`.
+El servidor se ejecutará por defecto en `http://localhost:3001`. 
 
 La documentación de la API está disponible en: `http://localhost:3001/swagger`
 
@@ -120,8 +121,9 @@ http://localhost:3001/swagger
 
 | Variable    | Descripción                        |
 |------------ |------------------------------------|
-| PORT        | Puerto en el que corre el servidor  |
+| PORT        | Puerto en el que corre el servidor |
 | MONGO_URI   | URI de conexión a MongoDB          |
+| JWT_SECRET  | Palabra clave para encriptar
 
 ## Licencia
 ISC

@@ -9,13 +9,6 @@ const router = Router();
  * /groups/my-groups:
  *   get:
  *     description: Listar los grupos del usuario autenticado
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     responses:
  *        200:
  *          description: Lista de Grupos
@@ -28,12 +21,6 @@ router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
  *   get:
  *     description: Obtener información de un grupo por Id
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -50,13 +37,6 @@ router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);
  * /groups:
  *   post:
  *     description: Crear un nuevo grupo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -74,13 +54,6 @@ router.post('/', authMiddleware, groupcontroller.createGroup);
  * /groups/add-groupmember:
  *   post:
  *     summary: Agregar un miembro a un grupo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -103,13 +76,6 @@ router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
  * /groups/change-group-info:
  *   put:
  *     summary: Actualizar información de un grupo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -135,12 +101,6 @@ router.put('/change-group-info', authMiddleware, groupcontroller.changeGroupInfo
  *   delete:
  *     summary: Eliminar un grupo por Id
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true
@@ -158,12 +118,6 @@ router.delete('/:groupId', authMiddleware, groupcontroller.deleteGroup);
  *   delete:
  *     summary: Eliminar un miembro de un grupo
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: groupId
  *         required: true

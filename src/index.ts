@@ -25,6 +25,7 @@ app.use('/swagger', serve, setup(swaggerDocs));
 dbConnect().then(() => {
     app.listen(port, () => {
         console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
+        console.log(`📚Servidor corriendo en http://localhost:${port}/swagger/`);
         console.log(`📰 API lista para usar`);
     })
 }).catch(() => {

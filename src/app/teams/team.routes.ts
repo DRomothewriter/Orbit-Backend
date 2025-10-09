@@ -9,13 +9,6 @@ const router = Router();
  * /teams/my-teams:
  *   get:
  *     description: Listar los teams del usuario autenticado
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     responses:
  *       200:
  *         description: Lista de Teams
@@ -28,12 +21,6 @@ router.get('/my-teams', authMiddleware, teamcontroller.getMyTeams);
  *   get:
  *     description: Obtener información de un team por id
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true
@@ -51,12 +38,6 @@ router.get('/:teamId', authMiddleware, teamcontroller.getTeamById)
  *   post:
  *     description: Crear un nuevo equipo
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -67,20 +48,13 @@ router.get('/:teamId', authMiddleware, teamcontroller.getTeamById)
  *       201:
  *         description: Equipo creado
  */
-router.post('/',authMiddleware, teamcontroller.createTeam);
+router.post('/', authMiddleware, teamcontroller.createTeam);
 
 /**
  * @swagger
  * /teams/add-teamate:
  *   post:
  *     description: Agregar un miembro a un equipo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -103,13 +77,6 @@ router.post('/add-teamate', authMiddleware, teamcontroller.addTeamate);
  * /teams/change-team-info:
  *   put:
  *     description: Actualizar información de un equipo
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -135,12 +102,6 @@ router.put('/change-team-info', authMiddleware, teamcontroller.changeTeamInfo);
  *   delete:
  *     description: Eliminar un equipo por ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true
@@ -158,12 +119,6 @@ router.delete('/:teamId', authMiddleware, teamcontroller.deleteTeam);
  *   delete:
  *     description: Eliminar un miembro de un equipo
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: teamId
  *         required: true

@@ -5,7 +5,7 @@ import groupRoutes from './groups/group.routes';
 import teamRoutes from './teams/team.routes';
 import messageRoutes from './messages/message.routes';
 import taskRoutes from './tasks/task.routes';
-
+import notificationRoutes from './notifications/notification.routes';
 
 const router = Router();
 
@@ -15,5 +15,5 @@ router.use('/groups', groupRoutes);
 router.use('/teams', teamRoutes);
 router.use('/mmessages', messageRoutes);
 router.use('/tasks', taskRoutes);
-// router.use('/notifications', notificationRoutes);
+router.use('/notifications', notificationRoutes);
 export default router;

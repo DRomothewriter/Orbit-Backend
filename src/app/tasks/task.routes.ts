@@ -9,13 +9,6 @@ const router = Router();
  * /tasks:
  *   post:
  *     description: Crear una nueva tarea
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -41,12 +34,6 @@ router.post("/", authMiddleware, taskController.createTask);
  *   get:
  *     description: Obtener una tarea por su ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: taskId
  *         required: true
@@ -66,13 +53,6 @@ router.get("/:taskId", authMiddleware, taskController.viewTaskById)
  * /tasks/modifyTask:
  *   put:
  *     description: Modificar una tarea existente
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *     requestBody:
  *       required: true
  *       content:
@@ -100,12 +80,6 @@ router.put("/modifyTask", authMiddleware, taskController.modifyTask);
  *   delete:
  *     description: Eliminar una tarea por su ID
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Token formato "Bearer <token>"
  *       - in: path
  *         name: taskId
  *         required: true

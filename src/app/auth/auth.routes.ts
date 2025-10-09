@@ -8,6 +8,7 @@ const router = Router();
  * /auth/login:
  *   post:
  *     description: Iniciar sesión de usuario
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -32,6 +33,7 @@ router.post('/login', login);
  * /auth/signup:
  *   post:
  *     description: Registrar un nuevo usuario
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:

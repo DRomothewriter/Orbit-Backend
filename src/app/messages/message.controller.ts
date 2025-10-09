@@ -3,10 +3,12 @@ import Reaction from './reaction.model';
 
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
+import GroupMember from '../groups/groupMember.model';
+import Notification from '../notifications/notification.model';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
-	const { groupId} = req.params;
-	const page:number = parseInt(req.query.page as string, 10) || 1;
+	const { groupId } = req.params;
+	const page: number = parseInt(req.query.page as string, 10) || 1;
 	const pageSize = 100;
 	try {
 		const groupMessages = await Message.find({ groupId: groupId })
@@ -49,6 +51,21 @@ export const createMessage = async (req: Request, res: Response) => {
 		const newMessage = new Message({ type, text, groupId, userId });
 		await newMessage.save();
 		const messageId = newMessage._id;
+
+		const receivers = await GroupMember.find({ groupId: groupId });
+
+		//para no tener que esperar a que se manden todas las notificaciones
+		Promise.all(
+			receivers
+				.filter((r) => r.userId.toString() !== userId.toString())
+				.map((receiver) =>
+					Notification.create({
+						receiverId: receiver.userId,
+						messageId: messageId,
+						seen: false,
+					})
+				)
+		);
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
@@ -122,6 +139,9 @@ export const deleteReaction = async (req: Request, res: Response) => {
 			{ $inc: { reactionCount: -1 } },
 			{ new: true }
 		);
-		return res.status(Status.SUCCESS).json({ deletedReaction: deletedReaction, updatedMessage: updatedMessage });
+		return res.status(Status.SUCCESS).json({
+			deletedReaction: deletedReaction,
+			updatedMessage: updatedMessage,
+		});
 	} catch (e) {}
 };
