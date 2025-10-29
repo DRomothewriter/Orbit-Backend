@@ -1,19 +1,19 @@
 
 import { model, Schema, SchemaTypes } from 'mongoose';
 
-const teamSchema = new Schema({
-	teamName: {
+const communitySchema = new Schema({
+	communityName: {
 		type: SchemaTypes.String,
 		required: true,
 	},
 	description: {
 		type: SchemaTypes.String
 	},
-	teamImgUrl: {
+	communityImgUrl: {
 		type: SchemaTypes.String,
 	}
 });
 
-const Team = model('Team', teamSchema);
-export default Team;
+const Community = model('Community', communitySchema);
+export default Community;
 

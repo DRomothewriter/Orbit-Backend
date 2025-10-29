@@ -8,13 +8,14 @@ import swaggerOptions from '../swagger.config';
 import { dbConnect } from './database';
 
 import { Server } from 'socket.io';
-import http, { createServer } from 'http';
+import http, {createServer} from 'http';
 import routes from './app/routes';
+import { setupSocket } from 'socket';
 
 const port = process.env.PORT || 3001;
 
 const app = express();
-const server = createServer(app);
+const server: http.Server = createServer(app);
 const io = new Server(server);
 
 app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesarias
@@ -27,12 +28,7 @@ app.get('', (req, res) => {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/swagger', serve, setup(swaggerDocs));
 
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    })
-})
+setupSocket(io)
 
 dbConnect()
 	.then(() => {
