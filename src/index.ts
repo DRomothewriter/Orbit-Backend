@@ -17,6 +17,7 @@ const port = process.env.PORT || 3001;
 const app = express();
 const server: http.Server = createServer(app);
 const io = new Server(server);
+app.set('io', io);
 
 app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesarias
 app.use(routes);

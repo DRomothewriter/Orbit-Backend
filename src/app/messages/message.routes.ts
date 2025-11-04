@@ -26,7 +26,7 @@ const router = Router();
  *       200:
  *         description: Mensajes del grupo
  */
-router.get('/:groupId', authMiddleware, messageController.getGroupMessages);
+router.get('/groupMessages/:groupId', authMiddleware, messageController.getGroupMessages);
 
 /**
  * @swagger

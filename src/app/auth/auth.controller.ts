@@ -35,3 +35,4 @@ export const signup = async (req: Request, res: Response) => {
         return res.status(Status.INTERNAL_ERROR).json({error: "Server error", e})
     }
 }
+

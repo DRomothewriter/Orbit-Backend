@@ -1,4 +1,10 @@
-import { model, Schema, SchemaTypes} from 'mongoose';
+import { model, Schema, SchemaTypes, Types} from 'mongoose';
+
+export interface IGroupMember {
+	userId: Types.ObjectId;
+	group: Types.ObjectId;
+	role: 'admin' | 'member';
+}
 
 const groupMemberSchema = new Schema(
 	{
@@ -19,5 +25,5 @@ const groupMemberSchema = new Schema(
 	{ timestamps: true }
 );
 
-const GroupMember = model('GroupMember', groupMemberSchema);
+const GroupMember = model<IGroupMember>('GroupMember', groupMemberSchema);
 export default GroupMember;

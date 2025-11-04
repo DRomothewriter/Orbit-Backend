@@ -3,19 +3,20 @@ import GroupMember from './groupMember.model';
 
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
+import Message from 'app/messages/message.model';
+
 
 export const getMyGroups = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
-		console.log("here")
-
 		const groupMembers = await GroupMember.find({ userId: userId });
 		const groupIds = groupMembers.map((gM) => gM.userId);
 		const allMyGroups = await Group.find({ _id: { $in: groupIds } });
 
-        const myTeamGroups = allMyGroups.filter((g) => g.teamId);
-        const myGroups = allMyGroups.filter((g)=> !g.teamId);
-		return res.status(Status.SUCCESS).json({ myGroups: myGroups, myTeamGroups: myTeamGroups });
+		// Tal vez use esto
+        // const myCommunityGroups = allMyGroups.filter((g) => g.communityId);
+        // const myGroups = allMyGroups.filter((g)=> g.communityId);
+		return res.status(Status.SUCCESS).json({ myGroups: allMyGroups});
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}
@@ -32,10 +33,10 @@ export const getGroupById = async (req: Request, res: Response) => {
 };
 
 export const createGroup = async (req: Request, res: Response) => {
-    const { teamId, topic, description, groupImgUrl } = req.body;
+    const group = req.body.group;
     const userId = req.user.id;
     try{
-        const newGroup = new Group({ teamId, topic, description, groupImgUrl});
+        const newGroup = new Group(group);
         await newGroup.save();
         const groupId = newGroup._id;
 
@@ -69,17 +70,20 @@ export const changeGroupInfo = async (req:Request, res: Response) => {
 	}
 };
 
+//falta middleware para ver si es admin
 export const deleteGroup = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
 	try{
 		const deletedGroup = await Group.findByIdAndDelete(groupId);
 		const deletedMembers = await GroupMember.deleteMany({groupId: groupId});
+		await Message.deleteMany({groupId: groupId});
 		return res.status(Status.SUCCESS).json({deletedGroup: deletedGroup, deletedMembers: deletedMembers});
 	}catch(e){
 		return res.status(Status.INTERNAL_ERROR).json({error: 'Server error'});
 	}
 }
 
+//falta middleware para ver si es admin
 export const deleteGroupMember = async (req: Request, res: Response) => {
 	const { groupMemberId } = req.params;
 	try{

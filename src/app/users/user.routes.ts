@@ -230,5 +230,6 @@ router.get('/received-requests', authMiddleware, userController.getReceivedReque
  *         description: Amistad no encontrada
  */
 router.delete('/delete-friendship', authMiddleware, userController.deleteFriendship);
+//Me falta un middleware para ver si es el owner
 
 export default router;

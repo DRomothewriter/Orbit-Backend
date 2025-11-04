@@ -13,7 +13,7 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/groups', groupRoutes);
 router.use('/communities', communityRoutes);
-router.use('/mmessages', messageRoutes);
+router.use('/messages', messageRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/notifications', notificationRoutes);
 export default router;

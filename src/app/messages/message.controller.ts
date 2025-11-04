@@ -3,8 +3,9 @@ import Reaction from './reaction.model';
 
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
-import GroupMember from '../groups/groupMember.model';
-import Notification from '../notifications/notification.model';
+import { notifyUsers } from 'app/notifications/notification.service';
+import { getGroupMembers } from 'app/groups/group.service';
+import { IGroupMember } from 'app/groups/groupMember.model';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
@@ -47,30 +48,25 @@ export const getMessageById = async (req: Request, res: Response) => {
 export const createMessage = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { type, text, groupId } = req.body;
+	const io = req.app.get('io');
 	try {
 		const newMessage = new Message({ type, text, groupId, userId });
 		await newMessage.save();
 		const messageId = newMessage._id;
 
-		const receivers = await GroupMember.find({ groupId: groupId });
+		//socket
+		io.to(`${groupId}`).emit('receiveMessage', newMessage); 
 
-		//para no tener que esperar a que se manden todas las notificaciones
-		Promise.all(
-			receivers
-				.filter((r) => r.userId.toString() !== userId.toString())
-				.map((receiver) =>
-					Notification.create({
-						receiverId: receiver.userId,
-						messageId: messageId,
-						seen: false,
-					})
-				)
-		);
+		const receivers: IGroupMember[] = await getGroupMembers(groupId);
+		
+		//sin await para que sea más rápido. Igual si no se recibe alguna notification no es importante
+		notifyUsers(receivers, messageId, req.app.get('io'));
+
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' +  e });
 	}
 };
 

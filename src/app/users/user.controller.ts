@@ -4,17 +4,17 @@ import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
 
 export const getAllUsers = async (req: Request, res: Response) => {
-	try{
+	try {
 		const users = await User.find().select('_id username');
-		return res.status(Status.SUCCESS).json({ users: users})
-	}catch(e){
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e});
+		return res.status(Status.SUCCESS).json({ users: users });
+	} catch (e) {
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}
 };
 
 export const getMyUser = async (req: Request, res: Response) => {
 	try {
-		const user = await User.findById(req.user.id); 
+		const user = await User.findById(req.user.id);
 		return res.status(Status.SUCCESS).json({ user: user });
 	} catch (e) {
 		return res.status(Status.UNAUTHORIZED).json({ error: 'No autenticado' });
@@ -58,6 +58,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const sendFriendRequest = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { friendId } = req.body;
+
 	try {
 		const exists = await Friendship.findOne({ userId, friendId });
 		if (exists)
@@ -67,6 +68,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 
 		const friendship = new Friendship({ userId, friendId, status: 'pending' });
 		await friendship.save();
+
 		return res.status(Status.CREATED).json({ friendship });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -140,8 +142,14 @@ export const muteFriend = async (req: Request, res: Response) => {
 export const getFriends = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
-		const friendships = await Friendship.find({userId: userId}).populate('userId friendId');
-		if(!friendships) return res.status(Status.NO_CONTENT).json({ message: 'You have no friends'});
+		const friendships = await Friendship.find({
+			userId: userId,
+			status: 'accepted',
+		});
+		if (!friendships)
+			return res
+				.status(Status.NO_CONTENT)
+				.json({ message: 'You have no friends' });
 		return res.status(Status.SUCCESS).json({ friends: friendships });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -150,12 +158,17 @@ export const getFriends = async (req: Request, res: Response) => {
 
 export const getReceivedRequests = async (req: Request, res: Response) => {
 	const userId = req.user.id;
-	try{
-		const friendRequests = await Friendship.find({friendId: userId});
-		if(!friendRequests) return res.status(Status.NO_CONTENT).json({message: "You don't have friend requests"});
-		return res.status(Status.SUCCESS).json({ friendRequests: friendRequests});
-	}catch(e){
-		return res.status(Status.INTERNAL_ERROR).json({ error: `Server error: ${e}`});
+	try {
+		const friendRequests = await Friendship.find({ friendId: userId });
+		if (!friendRequests)
+			return res
+				.status(Status.NO_CONTENT)
+				.json({ message: "You don't have friend requests" });
+		return res.status(Status.SUCCESS).json({ friendRequests: friendRequests });
+	} catch (e) {
+		return res
+			.status(Status.INTERNAL_ERROR)
+			.json({ error: `Server error: ${e}` });
 	}
 };
 
@@ -167,6 +180,11 @@ export const deleteFriendship = async (req: Request, res: Response) => {
 			return res
 				.status(Status.NOT_FOUND)
 				.json({ error: 'Friendship not found' });
+
+		await Friendship.findOneAndDelete({
+			userId: deleted.friendId,
+			friendId: deleted.userId,
+		});
 		return res.status(Status.SUCCESS).json({ deleted });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
