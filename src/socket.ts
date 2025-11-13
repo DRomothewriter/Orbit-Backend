@@ -4,12 +4,14 @@ import jwt from 'jsonwebtoken';
 const connectedSockets = [
 	//username, socketId, userId
 ];
-export function setupSocket(io: Server) {
+
+export const setupSocket = (io: Server) => {
 	io.on('connection', (socket) => {
 		const token = socket.handshake.auth.token;
 		//Leemos el token para saber qué usuario es
 		const groupIds = JSON.parse(socket.handshake.query.groupIds as string);
-		const user = socket.handshake.query.user;
+		const user = JSON.parse(socket.handshake.query.user as string);
+		//En teoría el user ya viene con el userId también
 		let userId: string;
 		if (token) {
 			try {
@@ -34,6 +36,8 @@ export function setupSocket(io: Server) {
 			}
 		}
 
+		//Tal vez agregar una confiration
+
 		console.log(
 			`Nuevo cliente conectado:${socket.id}. UserId: ${socket.data.userId}`
 		);
@@ -43,6 +47,7 @@ export function setupSocket(io: Server) {
 			userId: userId,
 		});
 
+		//on.('newGroup') join al nuevo id y agregar a mis groupIds
 		socket.on('disconnect', () => {
 			console.log('User disconnected:', socket.id);
 			const index = connectedSockets.findIndex((s) => s.socketId === socket.id);

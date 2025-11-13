@@ -1,5 +1,4 @@
 import { model, SchemaTypes, Schema } from 'mongoose';
-
 const messageSchema = new Schema(
 	{
 		type: {
@@ -18,6 +17,10 @@ const messageSchema = new Schema(
 		userId: {
 			type: SchemaTypes.ObjectId,
 			required: true,
+		},
+		username:{
+			type: SchemaTypes.String,
+			required: true
 		},
 		reactionCount: {
 			type: SchemaTypes.Number,

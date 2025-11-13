@@ -29,6 +29,34 @@ router.get('/my-user', authMiddleware, userController.getMyUser);
 
 /**
  * @swagger
+ * /users/friends:
+ *   get:
+ *     description: Listar amigos aceptados del usuario autenticado
+ *     responses:
+ *       200:
+ *         description: Lista de amigos
+ */
+router.get('/friends', authMiddleware, userController.getFriends);
+
+
+router.get('/search', authMiddleware, userController.searchUsers);
+
+/**
+ * @swagger
+ * /users/received-requests:
+ *   get:
+ *     description: Listar solicitudes de amistad recibidas
+ *     responses:
+ *       200:
+ *         description: Lista de solicitudes de amistad
+ *       204:
+ *         description: No tiene solicitudes
+ */
+router.get('/received-requests', authMiddleware, userController.getReceivedRequests);
+
+
+/**
+ * @swagger
  * /users/{userId}:
  *   get:
  *     description: Obtener usuario por ID
@@ -42,8 +70,10 @@ router.get('/my-user', authMiddleware, userController.getMyUser);
  *     responses:
  *       200:
  *         description: Usuario encontrado
- */
+*/
 router.get('/:userId', authMiddleware, userController.getUserById);
+
+
 
 /**
  * @swagger
@@ -184,29 +214,7 @@ router.put('/block-friend', authMiddleware, userController.blockFriend);
  */
 router.put('/mute-friend', authMiddleware, userController.muteFriend);
 
-/**
- * @swagger
- * /users/friends:
- *   get:
- *     description: Listar amigos aceptados del usuario autenticado
- *     responses:
- *       200:
- *         description: Lista de amigos
- */
-router.get('/friends', authMiddleware, userController.getFriends);
 
-/**
- * @swagger
- * /users/received-requests:
- *   get:
- *     description: Listar solicitudes de amistad recibidas
- *     responses:
- *       200:
- *         description: Lista de solicitudes de amistad
- *       204:
- *         description: No tiene solicitudes
- */
-router.get('/received-requests', authMiddleware, userController.getReceivedRequests);
 
 /**
  * @swagger

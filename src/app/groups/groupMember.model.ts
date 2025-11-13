@@ -2,7 +2,7 @@ import { model, Schema, SchemaTypes, Types} from 'mongoose';
 
 export interface IGroupMember {
 	userId: Types.ObjectId;
-	group: Types.ObjectId;
+	groupId: Types.ObjectId;
 	role: 'admin' | 'member';
 }
 

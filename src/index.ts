@@ -8,20 +8,34 @@ import swaggerOptions from '../swagger.config';
 import { dbConnect } from './database';
 
 import { Server } from 'socket.io';
-import http, {createServer} from 'http';
+import http, { createServer } from 'http';
 import routes from './app/routes';
-import { setupSocket } from 'socket';
-
-const port = process.env.PORT || 3001;
+import { setupSocket } from './socket';
+import cors from 'cors';
+const port = process.env.PORT || 3000;
 
 const app = express();
+app.use(
+	cors({
+		origin: 'http://localhost:4200',
+		credentials: true,
+		methods: ['GET', 'POST', 'PUT', 'DELETE'],
+	})
+);
 const server: http.Server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+	cors: {
+		origin: 'http://localhost:4200',
+		methods: ['GET', 'POST','PUT', 'DELETE'],
+		credentials: true,
+	},
+});
+
 app.set('io', io);
 
 app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesarias
-app.use(routes);
 
+app.use(routes);
 app.get('', (req, res) => {
 	res.json({ message: 'api works' });
 });
@@ -29,7 +43,7 @@ app.get('', (req, res) => {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/swagger', serve, setup(swaggerDocs));
 
-setupSocket(io)
+setupSocket(io);
 
 dbConnect()
 	.then(() => {
