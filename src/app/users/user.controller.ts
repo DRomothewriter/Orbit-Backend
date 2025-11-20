@@ -16,7 +16,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 export const getMyUser = async (req: Request, res: Response) => {
 	try {
+		console.log(req.user.id)
 		const user = await User.findById(req.user.id);
+		console.log(user)
 		return res.status(Status.SUCCESS).json(user);
 	} catch (e) {
 		return res.status(Status.UNAUTHORIZED).json({ error: 'No autenticado' });

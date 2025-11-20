@@ -7,6 +7,8 @@ import { notifyUsers } from '../notifications/notification.service';
 import { getGroupMembers } from '../groups/group.service';
 import { IGroupMember } from '../groups/groupMember.model';
 
+import { uploadS3 } from '../middlewares/upload-s3';
+
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
 	const page: number = parseInt(req.query.page as string, 10) || 1;
@@ -67,6 +69,44 @@ export const createMessage = async (req: Request, res: Response) => {
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' +  e });
 	}
+};
+
+export const createImageMessage = async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const { groupId, username, text } = req.body;
+    const file = req.file as Express.MulterS3.File;
+    const io = req.app.get('io');
+
+    if (!file) {
+        return res.status(Status.BAD_REQUEST).json({ error: 'No image uploaded' });
+    }
+
+    try {
+        const newMessage = new Message({ 
+            type: 'image', 
+            text: text || '',
+            imageUrl: file.location, // URL de S3
+            groupId, 
+            userId, 
+            username 
+        });
+        
+        await newMessage.save();
+        const messageId = newMessage._id;
+
+        // Socket
+        io.to(`${groupId}`).emit('message', newMessage); 
+        const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(r => r.userId.toString() !== userId.toString());
+        
+        // Notificaciones sin await
+        notifyUsers(receivers, messageId, req.app.get('io'));
+
+        return res
+            .status(Status.CREATED)
+            .json({ newMessage: newMessage, messageId: messageId });
+    } catch (e) {
+        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error: ' + e });
+    }
 };
 
 export const createReaction = async (req: Request, res: Response) => {

@@ -59,7 +59,7 @@ router.post('/login', login);
  */
 router.post('/signup', signup);
 
-router.post('/auth/google', async (req, res) => {
+router.post('/google', async (req, res) => {
 	const { idToken } = req.body;
 	try {
 		const ticket = await client.verifyIdToken({
@@ -77,12 +77,12 @@ router.post('/auth/google', async (req, res) => {
 		}
 
 		const token = jwt.sign(
-			{ userId: user._id, email: user.email },
+			{ id: user._id, email: user.email },
 			process.env.JWT_SECRET,
 			{ expiresIn: '1d' }
 		);
 
-		res.status(200).json(token);
+		res.status(200).json({token, user});
 	} catch (err) {
 		res.status(401).json({ error: 'Token de Google inválido' });
 	}

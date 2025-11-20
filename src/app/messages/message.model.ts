@@ -6,10 +6,18 @@ const messageSchema = new Schema(
 			enum: ['text', 'image', 'voice', 'video', 'emoji', 'multimedia'],
 			required: true,
 		},
-		text: {
-			type: String,
-			required: true,
-		},
+        text: {
+            type: String,
+            required: function(this: any) {
+                return this.type === 'text' || this.type === 'emoji';
+            },
+        },
+        imageUrl: {
+            type: String,
+            required: function(this: any) {
+                return this.type === 'image';
+            },
+        },
 		groupId: {
 			type: SchemaTypes.ObjectId,
 			required: true,
