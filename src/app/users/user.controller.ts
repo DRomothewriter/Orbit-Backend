@@ -131,7 +131,7 @@ export const getFriends = async (req: Request, res: Response) => {
 		const friendships = await Friendship.find({
 			userId: userId,
 			status: 'accepted',
-		});
+		}).populate('friendId');
 		if (!friendships)
 			return res
 		.status(Status.NO_CONTENT)

@@ -12,7 +12,6 @@ const userSchema = new Schema({
     },
     password: {
         type: SchemaTypes.String,
-        required: true
     },
     profileImgUrl: {
         type: SchemaTypes.String
