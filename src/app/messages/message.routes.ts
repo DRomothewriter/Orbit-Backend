@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as messageController from './message.controller';
-import { uploadS3 } from '../middlewares/upload-s3';
+import { uploadS3 } from '../middlewares/s3';
 
 const router = Router();
 

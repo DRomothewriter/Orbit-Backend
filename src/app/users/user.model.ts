@@ -15,6 +15,11 @@ const userSchema = new Schema({
     },
     profileImgUrl: {
         type: SchemaTypes.String
+    },
+    status:{
+        type: SchemaTypes.String,
+        enum: ['online', 'working', 'offline'],
+        default: 'offline'
     }
 },{timestamps: true})
 

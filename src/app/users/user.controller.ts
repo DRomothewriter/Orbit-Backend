@@ -4,24 +4,26 @@ import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
 import { notifyUser } from '../notifications/notification.service';
 import { NotificationType } from '../notifications/notification.model';
+import { deleteImageFromS3 } from '../middlewares/s3';
 
 export const getAllUsers = async (req: Request, res: Response) => {
 	try {
 		const users = await User.find().select('_id username');
 		return res.status(Status.SUCCESS).json({ users: users });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
 export const getMyUser = async (req: Request, res: Response) => {
+	if (!req.user) {
+		return res.status(Status.UNAUTHORIZED).json({ error: 'No autenticado' });
+	}
 	try {
-		console.log(req.user.id)
 		const user = await User.findById(req.user.id);
-		console.log(user)
 		return res.status(Status.SUCCESS).json(user);
 	} catch (e) {
-		return res.status(Status.UNAUTHORIZED).json({ error: 'No autenticado' });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
@@ -31,20 +33,20 @@ export const getUserById = async (req: Request, res: Response) => {
 		const user = await User.findById(userId);
 		return res.status(Status.SUCCESS).json({ user: user });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
 export const searchUsers = async (req: Request, res: Response) => {
 	const username = req.query.username as string;
 	try {
-        const users = await User.find({
-            username: { $regex: username, $options: 'i' }
-        }).select('_id username email');
+		const users = await User.find({
+			username: { $regex: username, $options: 'i' },
+		}).select('_id username email');
 		//falta validación que no regrese el user propio
-		return res.status(Status.SUCCESS).json( users );
+		return res.status(Status.SUCCESS).json(users);
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
@@ -56,9 +58,28 @@ export const modifyUser = async (req: Request, res: Response) => {
 			{ username, email, password, profileImgUrl },
 			{ new: true }
 		);
+		if (!user)
+			return res.status(Status.NOT_FOUND).json({ Message: 'User not found' });
 		return res.status(Status.SUCCESS).json({ updatedUser: user });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
+	}
+};
+
+export const editUsername = async (req: Request, res: Response) => {
+	const username = req.body.username;
+	const userId = req.user.id;
+	try {
+		const user = await User.findByIdAndUpdate(
+			userId,
+			{ username: username },
+			{ new: true }
+		);
+		if (!user)
+			return res.status(Status.NOT_FOUND).json({ Message: 'User not found' });
+		return res.status(Status.SUCCESS).json(user);
+	} catch (e) {
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
@@ -68,7 +89,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 		const deletedUser = await User.findByIdAndDelete(userId);
 		return res.status(Status.SUCCESS).json({ deletedUser: deletedUser });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
@@ -90,7 +111,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 
 		return res.status(Status.CREATED).json({ friendship });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
@@ -116,16 +137,20 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 		await reverseFriendship.save();
 
 		console.log(reverseFriendship);
-		notifyUser(friendship.userId, NotificationType.FRIEND_REQUEST_ACCEPTED, friendship, io);
+		notifyUser(
+			friendship.userId,
+			NotificationType.FRIEND_REQUEST_ACCEPTED,
+			friendship,
+			io
+		);
 
 		return res
 			.status(Status.SUCCESS)
 			.json({ hisFriendship: friendship, myFriendship: reverseFriendship });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
-
 
 export const getFriends = async (req: Request, res: Response) => {
 	const userId = req.user.id;
@@ -136,27 +161,30 @@ export const getFriends = async (req: Request, res: Response) => {
 		}).populate('friendId');
 		if (!friendships)
 			return res
-		.status(Status.NO_CONTENT)
-		.json({ message: 'You have no friends' });
+				.status(Status.NO_CONTENT)
+				.json({ message: 'You have no friends' });
 		return res.status(Status.SUCCESS).json(friendships);
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 
 export const getReceivedRequests = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
-		const friendRequests = await Friendship.find({ friendId: userId, status: 'pending' });
+		const friendRequests = await Friendship.find({
+			friendId: userId,
+			status: 'pending',
+		});
 		if (!friendRequests)
 			return res
-		.status(Status.NO_CONTENT)
-		.json({ message: "You don't have friend requests" });
+				.status(Status.NO_CONTENT)
+				.json({ message: "You don't have friend requests" });
 		return res.status(Status.SUCCESS).json(friendRequests);
 	} catch (e) {
 		return res
-		.status(Status.INTERNAL_ERROR)
-		.json({ error: `Server error: ${e}` });
+			.status(Status.INTERNAL_ERROR)
+			.json({ error: `Server error: ${e}` });
 	}
 };
 
@@ -166,16 +194,16 @@ export const deleteFriendship = async (req: Request, res: Response) => {
 		const deleted = await Friendship.findByIdAndDelete(friendshipId);
 		if (!deleted)
 			return res
-		.status(Status.NOT_FOUND)
-		.json({ error: 'Friendship not found' });
-		
+				.status(Status.NOT_FOUND)
+				.json({ error: 'Friendship not found' });
+
 		await Friendship.findOneAndDelete({
 			userId: deleted.friendId,
 			friendId: deleted.userId,
 		});
 		return res.status(Status.SUCCESS).json({ deleted });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 export const blockFriend = async (req: Request, res: Response) => {
@@ -193,7 +221,7 @@ export const blockFriend = async (req: Request, res: Response) => {
 				.json({ error: 'Friendship not found' });
 		return res.status(Status.SUCCESS).json({ friendship: friendship });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
 	}
 };
 export const muteFriend = async (req: Request, res: Response) => {
@@ -211,6 +239,40 @@ export const muteFriend = async (req: Request, res: Response) => {
 				.json({ error: 'Friendship not found' });
 		return res.status(Status.SUCCESS).json({ friendship: friendship });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
+	}
+};
+export const changeUserStatus = async (req: Request, res: Response) => {
+	const userId = req.user.id;
+	const status = req.params.status;
+	try {
+		const newUser = await User.findByIdAndUpdate(
+			userId,
+			{ status: status },
+			{ new: true }
+		);
+		return res.status(Status.SUCCESS).json(newUser);
+	} catch (e) {
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
+	}
+};
+export const editProfileImg = async (req: Request, res: Response) => {
+	const userId = req.user.id;
+	const file = req.file as Express.MulterS3.File;
+	if (!file) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'No image uploaded' });
+	}
+	try {
+		const pastUser = await User.findByIdAndUpdate(
+			userId,
+			{ profileImgUrl: file.location },
+			{ new: false }
+		);
+		if (pastUser.profileImgUrl) {
+			deleteImageFromS3(pastUser.profileImgUrl);
+		}
+		return res.status(Status.SUCCESS).json(file.location);
+	} catch (e) {
+		return res.status(Status.INTERNAL_ERROR).json({ error: e });
 	}
 };

@@ -7,7 +7,7 @@ import { notifyUsers } from '../notifications/notification.service';
 import { getGroupMembers } from '../groups/group.service';
 import { IGroupMember } from '../groups/groupMember.model';
 
-import { uploadS3 } from '../middlewares/upload-s3';
+import { uploadS3 } from '../middlewares/s3';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;

@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import User from './app/users/user.model';
 
 const connectedSockets = [
 	//username, socketId, userId
@@ -22,6 +23,14 @@ export const setupSocket = (io: Server) => {
 				//console.log('Usuario conectdado. userId:', userId)
 				socket.data.userId = userId;
 				socket.join(userId);
+				User.findByIdAndUpdate(userId, { status: 'online' }, { new: true })
+					.then((updatedUser) => {
+						console.log(`User ${userId} status set to online`, updatedUser);
+					})
+					.catch((err) => {
+						console.error('Error setting user online:', err);
+					});
+
 				if (user && groupIds) {
 					socket.data.groupIds = groupIds;
 
@@ -48,7 +57,16 @@ export const setupSocket = (io: Server) => {
 		});
 
 		//on.('newGroup') join al nuevo id y agregar a mis groupIds
+
 		socket.on('disconnect', () => {
+			User.findByIdAndUpdate(userId, { status: 'offline' }, { new: true })
+				.then((updatedUser) => {
+					console.log(`User ${userId} status set to offline`, updatedUser);
+				})
+				.catch((err) => {
+					console.error('Error setting user online:', err);
+				});
+				
 			console.log('User disconnected:', socket.id);
 			const index = connectedSockets.findIndex((s) => s.socketId === socket.id);
 			if (index !== -1) {
@@ -58,4 +76,4 @@ export const setupSocket = (io: Server) => {
 
 		//WEBRTC VideoLlamadas (signaling server)
 	});
-}
+};
