@@ -25,7 +25,7 @@ export const setupSocket = (io: Server) => {
 				socket.join(userId);
 				User.findByIdAndUpdate(userId, { status: 'online' }, { new: true })
 					.then((updatedUser) => {
-						console.log(`User ${userId} status set to online`, updatedUser);
+						//console.log(`User ${userId} status set to online`, updatedUser);
 					})
 					.catch((err) => {
 						console.error('Error setting user online:', err);
@@ -61,7 +61,7 @@ export const setupSocket = (io: Server) => {
 		socket.on('disconnect', () => {
 			User.findByIdAndUpdate(userId, { status: 'offline' }, { new: true })
 				.then((updatedUser) => {
-					console.log(`User ${userId} status set to offline`, updatedUser);
+					//console.log(`User ${userId} status set to offline`, updatedUser);
 				})
 				.catch((err) => {
 					console.error('Error setting user online:', err);
