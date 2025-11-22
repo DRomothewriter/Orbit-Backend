@@ -2,6 +2,7 @@ import Notification from './notification.model';
 import Status from '../interfaces/Status';
 import { Request, Response } from 'express';
 
+//Tal vez no necesitamos esta función
 export const createNotification = async (req: Request, res: Response) => {
 	const { receiverId, messageId } = req.body;
 	try {
@@ -55,6 +56,8 @@ export const getAllMyNotifications = async (req: Request, res: Response) => {
 			.json({ error: 'Server error' + e });
 	}
 };
+
+
 
 export const updateToSeen = async (req: Request, res: Response) => {
 	const userId = req.user.id;

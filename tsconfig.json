@@ -6,6 +6,5 @@
         "module": "nodenext",
         "esModuleInterop": true,
         "resolveJsonModule": true
-        
     }
 }

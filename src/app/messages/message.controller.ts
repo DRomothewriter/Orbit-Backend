@@ -3,8 +3,11 @@ import Reaction from './reaction.model';
 
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
-import GroupMember from '../groups/groupMember.model';
-import Notification from '../notifications/notification.model';
+import { notifyUsers } from '../notifications/notification.service';
+import { getGroupMembers } from '../groups/group.service';
+import { IGroupMember } from '../groups/groupMember.model';
+
+import { uploadS3 } from '../middlewares/s3';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
@@ -12,7 +15,7 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 	const pageSize = 100;
 	try {
 		const groupMessages = await Message.find({ groupId: groupId })
-			.sort({ createdAt: -1 })
+			.sort({ createdAt: 1 })
 			.skip((page - 1) * pageSize)
 			.limit(pageSize);
 
@@ -24,7 +27,7 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 		);
 
 		return res.status(Status.SUCCESS).json({
-			messagesWithReactions: messagesWithReactions,
+			messages: messagesWithReactions,
 			length: messagesWithReactions.length,
 		});
 	} catch (e) {
@@ -46,32 +49,64 @@ export const getMessageById = async (req: Request, res: Response) => {
 
 export const createMessage = async (req: Request, res: Response) => {
 	const userId = req.user.id;
-	const { type, text, groupId } = req.body;
+	const { type, text, groupId, username } = req.body.message;
+	const io = req.app.get('io');
 	try {
-		const newMessage = new Message({ type, text, groupId, userId });
+		const newMessage = new Message({ type, text, groupId, userId, username });
 		await newMessage.save();
 		const messageId = newMessage._id;
 
-		const receivers = await GroupMember.find({ groupId: groupId });
+		//socket
+		io.to(`${groupId}`).emit('message', newMessage); 
+		const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(r => r.userId.toString() !== userId.toString());
+		
+		//sin await para que sea más rápido para el usuario. Igual si no se recibe alguna notification no es importante
+		notifyUsers(receivers, messageId, req.app.get('io'));
 
-		//para no tener que esperar a que se manden todas las notificaciones
-		Promise.all(
-			receivers
-				.filter((r) => r.userId.toString() !== userId.toString())
-				.map((receiver) =>
-					Notification.create({
-						receiverId: receiver.userId,
-						messageId: messageId,
-						seen: false,
-					})
-				)
-		);
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' +  e });
 	}
+};
+
+export const createImageMessage = async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const { groupId, username, text } = req.body;
+    const file = req.file as Express.MulterS3.File;
+    const io = req.app.get('io');
+
+    if (!file) {
+        return res.status(Status.BAD_REQUEST).json({ error: 'No image uploaded' });
+    }
+
+    try {
+        const newMessage = new Message({ 
+            type: 'image', 
+            text: text || '',
+            imageUrl: file.location, // URL de S3
+            groupId, 
+            userId, 
+            username 
+        });
+        
+        await newMessage.save();
+        const messageId = newMessage._id;
+
+        // Socket
+        io.to(`${groupId}`).emit('message', newMessage); 
+        const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(r => r.userId.toString() !== userId.toString());
+        
+        // Notificaciones sin await
+        notifyUsers(receivers, messageId, req.app.get('io'));
+
+        return res
+            .status(Status.CREATED)
+            .json({ newMessage: newMessage, messageId: messageId });
+    } catch (e) {
+        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error: ' + e });
+    }
 };
 
 export const createReaction = async (req: Request, res: Response) => {

@@ -12,10 +12,14 @@ const userSchema = new Schema({
     },
     password: {
         type: SchemaTypes.String,
-        required: true
     },
     profileImgUrl: {
         type: SchemaTypes.String
+    },
+    status:{
+        type: SchemaTypes.String,
+        enum: ['online', 'working', 'offline'],
+        default: 'offline'
     }
 },{timestamps: true})
 

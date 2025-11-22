@@ -1,15 +1,15 @@
 
 import { model, Schema, SchemaTypes } from 'mongoose';
 
-const teamateSchema = new Schema({
+const communityMemberSchema = new Schema({
 	userId: {
 		type: SchemaTypes.ObjectId,
 		ref: 'User',
 		required: true,
 	},
-	teamId: {
+	communityId: {
 		type: SchemaTypes.ObjectId,
-		ref: 'Team',
+		ref: 'Community',
 		required: true,
 	},
 	role: {
@@ -19,6 +19,6 @@ const teamateSchema = new Schema({
 	},
 });
 
-const Teamate = model('Teamate', teamateSchema);
-export default Teamate;
+const CommunityMember = model('CommunityMember', communityMemberSchema);
+export default CommunityMember;
 

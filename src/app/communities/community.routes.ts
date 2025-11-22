@@ -1,28 +1,28 @@
 // filepath: 
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
-import * as teamcontroller from './team.controller';
+import * as communityController from './community.controller';
 const router = Router();
 
 /**
  * @swagger
- * /teams/my-teams:
+ * /communitys/my-communities:
  *   get:
- *     description: Listar los teams del usuario autenticado
+ *     description: Listar los communitys del usuario autenticado
  *     responses:
  *       200:
- *         description: Lista de Teams
+ *         description: Lista de communitys
  */
-router.get('/my-teams', authMiddleware, teamcontroller.getMyTeams);
+router.get('/my-communities', authMiddleware, communityController.getMyCommunities);
 
 /**
  * @swagger
- * /teams/{teamId}:
+ * /communitys/{communityId}:
  *   get:
- *     description: Obtener información de un team por id
+ *     description: Obtener información de un community por id
  *     parameters:
  *       - in: path
- *         name: teamId
+ *         name: communityId
  *         required: true
  *         schema:
  *           type: string
@@ -30,11 +30,11 @@ router.get('/my-teams', authMiddleware, teamcontroller.getMyTeams);
  *       200:
  *         description: Información del equipo
  */
-router.get('/:teamId', authMiddleware, teamcontroller.getTeamById)
+router.get('/:communityId', authMiddleware, communityController.getCommunityById)
 
 /**
  * @swagger
- * /teams:
+ * /communitys:
  *   post:
  *     description: Crear un nuevo equipo
  *     parameters:
@@ -43,16 +43,16 @@ router.get('/:teamId', authMiddleware, teamcontroller.getTeamById)
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Team'
+ *             $ref: '#/components/schemas/community'
  *     responses:
  *       201:
  *         description: Equipo creado
  */
-router.post('/', authMiddleware, teamcontroller.createTeam);
+router.post('/', authMiddleware, communityController.createCommunity);
 
 /**
  * @swagger
- * /teams/add-teamate:
+ * /communitys/add-communityMember:
  *   post:
  *     description: Agregar un miembro a un equipo
  *     requestBody:
@@ -62,7 +62,7 @@ router.post('/', authMiddleware, teamcontroller.createTeam);
  *           schema:
  *             type: object
  *             properties:
- *               teamId:
+ *               communityId:
  *                 type: string
  *               userId:
  *                 type: string
@@ -70,11 +70,11 @@ router.post('/', authMiddleware, teamcontroller.createTeam);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-teamate', authMiddleware, teamcontroller.addTeamate);
+router.post('/add-communityMember', authMiddleware, communityController.addCommunityMember);
 
 /**
  * @swagger
- * /teams/change-team-info:
+ * /communitys/change-community-info:
  *   put:
  *     description: Actualizar información de un equipo
  *     requestBody:
@@ -84,26 +84,26 @@ router.post('/add-teamate', authMiddleware, teamcontroller.addTeamate);
  *           schema:
  *             type: object
  *             properties:
- *               teamId:
+ *               communityId:
  *                 type: string
- *               teamName:
+ *               communityName:
  *                 type: string
- *               teamImgUrl:
+ *               communityImgUrl:
  *                 type: string
  *     responses:
  *       200:
  *         description: Equipo actualizado
  */
-router.put('/change-team-info', authMiddleware, teamcontroller.changeTeamInfo);
+router.put('/change-community-info', authMiddleware, communityController.changeCommunityInfo);
 
 /**
  * @swagger
- * /teams/{teamId}:
+ * /communitys/{communityId}:
  *   delete:
  *     description: Eliminar un equipo por ID
  *     parameters:
  *       - in: path
- *         name: teamId
+ *         name: communityId
  *         required: true
  *         schema:
  *           type: string
@@ -111,16 +111,16 @@ router.put('/change-team-info', authMiddleware, teamcontroller.changeTeamInfo);
  *       200:
  *         description: Equipo eliminado
  */
-router.delete('/:teamId', authMiddleware, teamcontroller.deleteTeam);
+router.delete('/:communityId', authMiddleware, communityController.deleteCommunity);
 
 /**
  * @swagger
- * /teams/{teamId}/remove-teamate/{userId}:
+ * /communitys/{communityId}/remove-communityMember/{userId}:
  *   delete:
  *     description: Eliminar un miembro de un equipo
  *     parameters:
  *       - in: path
- *         name: teamId
+ *         name: communityId
  *         required: true
  *         schema:
  *           type: string
@@ -133,6 +133,6 @@ router.delete('/:teamId', authMiddleware, teamcontroller.deleteTeam);
  *       200:
  *         description: Miembro eliminado
  */
-router.delete('/:teamId/remove-teamate/:userId', authMiddleware, teamcontroller.deleteTeamate);
+router.delete('/:communityId/remove-communityMember/:userId', authMiddleware, communityController.deleteCommunityMember);
 
 export default router;

@@ -2,7 +2,7 @@ import { model, Schema, SchemaTypes} from 'mongoose';
 
 const groupSchema = new Schema(
 	{
-		teamId:{
+		communityId:{
 			type: SchemaTypes.ObjectId,
 		},
 		topic: {

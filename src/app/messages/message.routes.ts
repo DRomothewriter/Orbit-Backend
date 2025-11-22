@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as messageController from './message.controller';
+import { uploadS3 } from '../middlewares/s3';
 
 const router = Router();
 
@@ -26,7 +27,7 @@ const router = Router();
  *       200:
  *         description: Mensajes del grupo
  */
-router.get('/:groupId', authMiddleware, messageController.getGroupMessages);
+router.get('/groupMessages/:groupId', authMiddleware, messageController.getGroupMessages);
 
 /**
  * @swagger
@@ -69,6 +70,33 @@ router.get('/:messageId', authMiddleware, messageController.getMessageById);
  *         description: Mensaje creado
  */
 router.post('/', authMiddleware, messageController.createMessage);
+
+/**
+ * @swagger
+ * /messages/image:
+ *   post:
+ *     description: Crear un mensaje con imagen
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               groupId:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               text:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Mensaje con imagen creado
+ */
+router.post('/image', authMiddleware, uploadS3.single('image'), messageController.createImageMessage);
 
 /**
  * @swagger

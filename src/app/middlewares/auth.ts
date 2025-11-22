@@ -25,6 +25,6 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
         req.user = decoded;
         return next();
     }catch(e){
-        return res.status(Status.UNAUTHORIZED);
+        return res.status(Status.UNAUTHORIZED).json({error: 'Error auth'});
     }
 }
