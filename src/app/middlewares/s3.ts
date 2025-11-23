@@ -17,13 +17,17 @@ const s3Storage = multerS3({
 	metadata: (req, file, cb) => {
 		let cleanName = file.originalname.normalize('NFC');
 		cleanName = cleanName.replace(/[^\x00-\x7F]/g, '_');
+		const date = new Date();
+		cleanName += '_' + date.toISOString();
 		file.originalname = cleanName;
 		cb(null, { ...file });
 	},
 	acl: 'public-read',
 	key: (req, file, cb) => {
 		let cleanName = file.originalname.normalize('NFC');
-		cleanName = cleanName.replace(/[^\x00-\x7F]/g, '_'); // Reemplaza caracteres no ASCII por "_"
+		cleanName = cleanName.replace(/[^\x00-\x7F]/g, '_'); 
+		const date = new Date();
+		cleanName += '_' + date.toISOString();
 		cb(null, cleanName);
 	},
 });
@@ -41,10 +45,10 @@ export const uploadS3 = multer({
 	fileFilter: fileFilter,
 });
 
-export const deleteImageFromS3 = async (key:string) => {
+export const deleteImageFromS3 = async (key: string) => {
 	const params = {
-		Bucket:'server-class-bucket',
+		Bucket: 'server-class-bucket',
 		Key: key,
 	};
 	await s3.send(new DeleteObjectCommand(params));
-}
+};

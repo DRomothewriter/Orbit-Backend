@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as groupcontroller from './group.controller';
+import { uploadS3 } from '../middlewares/s3';
 
 const router = Router();
 /**
@@ -94,7 +95,8 @@ router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
  *         description: Grupo actualizado
  */
 router.put('/change-group-info', authMiddleware, groupcontroller.changeGroupInfo);
-
+router.put('/edit-topic/:groupId', authMiddleware, groupcontroller.editTopic);
+router.put('/edit-group-image/:groupId', authMiddleware, uploadS3.single('image'), groupcontroller.editGroupImg);
 /**
  * @swagger
  * /groups/{groupId}:

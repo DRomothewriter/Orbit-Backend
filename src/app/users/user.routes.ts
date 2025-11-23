@@ -76,6 +76,8 @@ router.get('/:userId', authMiddleware, userController.getUserById);
 
 router.put('/change-user-status/:status', authMiddleware, userController.changeUserStatus);
 router.put('/edit-username', authMiddleware, userController.editUsername);
+router.put('/edit-profile-image', authMiddleware, uploadS3.single('image'), userController.editProfileImg);
+
 /**
  * @swagger
  * /users/updateUser:
@@ -215,7 +217,6 @@ router.put('/block-friend', authMiddleware, userController.blockFriend);
  */
 router.put('/mute-friend', authMiddleware, userController.muteFriend);
 
-router.put('/edit-profile-image', authMiddleware, uploadS3.single('image'), userController.editProfileImg);
 
 /**
  * @swagger

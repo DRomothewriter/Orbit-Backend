@@ -4,6 +4,7 @@ import GroupMember from './groupMember.model';
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
 import Message from '../messages/message.model';
+import { deleteImageFromS3 } from '../middlewares/s3';
 
 export const getMyGroups = async (req: Request, res: Response) => {
 	const userId = req.user.id;
@@ -88,6 +89,40 @@ export const changeGroupInfo = async (req: Request, res: Response) => {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}
 };
+
+export const editTopic = async(req: Request, res: Response) => {
+	const groupId = req.params.groupId;
+	const topic = req.body.topic;
+	try{
+		const newGroup = await Group.findByIdAndUpdate(groupId, {topic}, {new: true});
+		if(!newGroup) return res.status(Status.NOT_FOUND).json({ message: 'Group not found'});
+		return res.status(Status.SUCCESS).json(newGroup.topic);
+	}catch(e){
+		return res.status(Status.INTERNAL_ERROR).json({error: e});
+	}
+}
+
+export const editGroupImg = async (req: Request, res: Response) => {
+	const file = req.file as Express.MulterS3.File
+	const groupId = req.params.groupId
+	if(!file){
+		return res.status(Status.BAD_REQUEST).json({error: 'No image uploaded'});
+	}
+	try{
+		const pastGroup = await Group.findByIdAndUpdate(groupId,
+			{ groupImgUrl: file.location},
+			{new: false}
+		);
+		if(!pastGroup)return res.status(Status.NOT_FOUND).json({message: 'Group not found'})
+		if(pastGroup.groupImgUrl){
+			deleteImageFromS3(pastGroup.groupImgUrl);
+		};
+		return res.status(Status.SUCCESS).json(file.location);
+	}catch(e){
+		return res.status(Status.INTERNAL_ERROR).json({error: e});
+	}
+}	
+
 
 //falta middleware para ver si es admin
 export const deleteGroup = async (req: Request, res: Response) => {
