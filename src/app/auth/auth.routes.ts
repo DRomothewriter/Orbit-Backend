@@ -73,6 +73,7 @@ router.post('/google', async (req, res) => {
 			user = await User.create({
 				email: payload?.email,
 				username: payload?.name,
+				profileImgUrl: payload?.picture
 			});
 		}
 

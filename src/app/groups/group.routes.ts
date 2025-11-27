@@ -15,6 +15,7 @@ const router = Router();
  *          description: Lista de Grupos
  */
 router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
+router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMembers);
 
 /**
  * @swagger
@@ -70,7 +71,7 @@ router.post('/', authMiddleware, groupcontroller.createGroup);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
+router.post('/add-groupmembers', authMiddleware, groupcontroller.addMembers);
 
 /**
  * @swagger

@@ -47,6 +47,7 @@ router.get('/groupMessages/:groupId', authMiddleware, messageController.getGroup
  */
 router.get('/:messageId', authMiddleware, messageController.getMessageById);
 
+
 /**
  * @swagger
  * /messages:

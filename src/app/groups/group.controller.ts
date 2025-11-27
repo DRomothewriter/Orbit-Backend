@@ -32,6 +32,17 @@ export const getGroupById = async (req: Request, res: Response) => {
 	}
 };
 
+export const getGroupMembers = async (req: Request, res: Response) => {
+	const groupId = req.params.groupId;
+	try{
+		const groupMembers = await GroupMember.find({groupId: groupId}).populate('userId');
+		if(!groupMembers || !groupMembers.length) return res.status(Status.NOT_FOUND).json({message: 'No group members found'})
+		return res.status(Status.SUCCESS).json(groupMembers);
+	}catch(e){
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e});
+	}	
+}
+
 export const createGroup = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { initialMembersIds, group } = req.body;
@@ -64,13 +75,18 @@ export const createGroup = async (req: Request, res: Response) => {
 	}
 };
 
-export const addMember = async (req: Request, res: Response) => {
-	const { groupId, userId } = req.body;
+export const addMembers = async (req: Request, res: Response) => {
+	const { groupId, userIds } = req.body;
 	try {
-		const member = new GroupMember({ groupId, userId });
-		await member.save();
+		const members = []
+		userIds.forEach(async (userId: string) => {
+			const member = new GroupMember({ groupId, userId });
+			await member.save()
+			members.push(member)
+		});
 		//Mandar notificación al nuevo groupMember
-		return res.status(Status.CREATED).json({ member: member });
+		//hacer join del nuevo usuario a la sala del grupo. Tal vez enviar un evento.
+		return res.status(Status.CREATED).json(members);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}

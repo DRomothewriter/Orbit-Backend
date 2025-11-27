@@ -11,6 +11,7 @@ const groupMemberSchema = new Schema(
 		userId: {
 			type: SchemaTypes.ObjectId,
 			required: true,
+			ref: 'User'
 		},
 		groupId: {
 			type: SchemaTypes.ObjectId,
