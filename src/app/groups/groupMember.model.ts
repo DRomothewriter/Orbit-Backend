@@ -21,6 +21,7 @@ const groupMemberSchema = new Schema(
 			type: SchemaTypes.String,
 			enum: ['admin', 'member'],
 			required: true,
+			default: 'member'
 		},
 	},
 	{ timestamps: true }
