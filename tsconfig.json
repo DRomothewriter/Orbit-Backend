@@ -3,8 +3,12 @@
         "baseUrl": "src",
         "outDir": "dist",
         "target": "esnext",
-        "module": "nodenext",
+        "module": "commonjs",
         "esModuleInterop": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": false,
+        "skipLibCheck": true
     }
 }

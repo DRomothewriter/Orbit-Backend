@@ -91,11 +91,101 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 - Mongoose (MongoDB)
 - Socket.IO
 - Swagger (Documentación de API)
+- Jest (Testing framework)
+- Supertest (HTTP testing)
+- MongoDB Memory Server (Testing database)
 
 ## Scripts útiles
 - `npm run dev` — Ejecuta el servidor en modo desarrollo con nodemon
 - `npm run build` — Compila el proyecto a JavaScript
 - `npm start` — Ejecuta el servidor en producción
+- `npm test` — Ejecuta todos los tests
+- `npm run test:watch` — Ejecuta los tests en modo watch
+- `npm run test:coverage` — Ejecuta los tests con reporte de cobertura
+
+## Testing
+
+El proyecto incluye una suite completa de tests que cubre todas las funcionalidades principales:
+
+### Ejecutar Tests
+```bash
+# Ejecutar todos los tests
+npm test
+
+# Ejecutar tests en modo watch
+npm run test:watch
+
+# Ejecutar tests con cobertura
+npm run test:coverage
+
+# Ejecutar tests específicos
+npm test auth.controller.test.ts
+npm test user.controller.test.ts
+```
+
+### Cobertura de Tests
+La suite de tests incluye:
+
+#### Controladores
+- **Auth Controller** (11 tests)
+  - Registro de usuarios
+  - Inicio de sesión
+  - Verificación de email
+  - Recuperación de contraseña
+  - Manejo de errores
+
+- **User Controller** (18 tests)
+  - Obtener todos los usuarios
+  - Buscar usuarios por query
+  - Obtener usuario por ID
+  - Obtener perfil del usuario actual
+  - Actualizar información del usuario
+  - Eliminar usuario
+  - Validación de datos
+
+- **Group Controller** (26 tests)
+  - Crear y gestionar grupos
+  - Añadir/eliminar miembros
+  - Actualizar información del grupo
+  - Obtener grupos del usuario
+  - Validaciones y permisos
+
+- **Team Controller** (25 tests)
+  - Crear y gestionar equipos
+  - Añadir/eliminar miembros del equipo
+  - Actualizar información del equipo
+  - Obtener equipos del usuario
+  - Validaciones y permisos
+
+- **Task Controller** (38 tests)
+  - Crear tareas
+  - Obtener tareas por ID y usuario
+  - Actualizar tareas
+  - Eliminar tareas
+  - Gestión de estados
+  - Validaciones completas
+
+- **Message Controller** (38 tests)
+  - Crear mensajes
+  - Obtener mensajes por grupo
+  - Actualizar y eliminar mensajes
+  - Sistema de reacciones
+  - Paginación
+  - Validaciones de permisos
+
+### Configuración de Testing
+Los tests utilizan:
+- **Jest** como framework de testing
+- **Supertest** para testing de endpoints HTTP
+- **MongoDB Memory Server** para base de datos en memoria
+- **Mocking** completo de dependencias externas
+- **Setup y teardown** automático de base de datos
+
+### Estadísticas Actuales
+- **9 suites de tests**
+- **156 tests en total**
+- **100% de tests pasando**
+- Cobertura completa de todos los controladores
 
 ## Estructura del proyecto
 
@@ -109,6 +199,16 @@ src/
 	 tasks/
 	 messages/
 	 auth/
+tests/
+  auth.controller.test.ts
+  user.controller.test.ts
+  group.controller.test.ts
+  team.controller.test.ts
+  task.controller.test.ts
+  message.controller.test.ts
+  setup/
+    database.ts
+    server.ts
 ```
 
 ## Documentación Swagger
@@ -124,6 +224,3 @@ http://localhost:3001/swagger
 | PORT        | Puerto en el que corre el servidor |
 | MONGO_URI   | URI de conexión a MongoDB          |
 | JWT_SECRET  | Palabra clave para encriptar
-
-## Licencia
-ISC

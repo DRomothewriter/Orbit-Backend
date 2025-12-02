@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, signup } from './auth.controller';
+import { login, signup, verifyEmail, verifyEmailByLink, forgotPassword, resetPassword } from './auth.controller';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../users/user.model'; // Ajusta la ruta según tu proyecto
 import jwt from 'jsonwebtoken';
@@ -87,4 +87,102 @@ router.post('/google', async (req, res) => {
 		res.status(401).json({ error: 'Token de Google inválido' });
 	}
 });
+
+/**
+ * @swagger
+ * /auth/verify:
+ *   get:
+ *     description: Verificar email por enlace (desde correo)
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       302:
+ *         description: Redirección al frontend
+ */
+router.get('/verify', verifyEmailByLink);
+
+/**
+ * @swagger
+ * /auth/verify-email:
+ *   post:
+ *     description: Verificar email con código de verificación
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               code:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email verificado exitosamente
+ *       400:
+ *         description: Código inválido
+ */
+router.post('/verify-email', verifyEmail);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     description: Solicitar recuperación de contraseña
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Instrucciones enviadas por correo
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     description: Restablecer contraseña con token
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada exitosamente
+ *       400:
+ *         description: Token inválido o expirado
+ */
+router.post('/reset-password', resetPassword);
+
 export default router;

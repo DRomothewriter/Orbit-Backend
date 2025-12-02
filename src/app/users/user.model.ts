@@ -20,6 +20,21 @@ const userSchema = new Schema({
         type: SchemaTypes.String,
         enum: ['online', 'working', 'offline'],
         default: 'offline'
+    },
+    // Campos para verificación de email
+    isVerified: {
+        type: SchemaTypes.Boolean,
+        default: false
+    },
+    verificationCode: {
+        type: SchemaTypes.String
+    },
+    // Campos para recuperación de contraseña
+    resetPasswordToken: {
+        type: SchemaTypes.String
+    },
+    resetPasswordExpiry: {
+        type: SchemaTypes.Date
     }
 },{timestamps: true})
 
