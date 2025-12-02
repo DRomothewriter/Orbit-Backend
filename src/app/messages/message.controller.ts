@@ -13,22 +13,20 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 	const page: number = parseInt(req.query.page as string, 10) || 1;
 	const pageSize = 100;
 	try {
+		//Revisar antes que sea miembro del grupo. Con middleware tal vez
 		const groupMessages = await Message.find({ groupId: groupId })
 			.sort({ createdAt: 1 })
 			.skip((page - 1) * pageSize)
-			.limit(pageSize);
-
+			.limit(pageSize).lean();
+	/*
 		const messagesWithReactions = await Promise.all(
 			groupMessages.map(async (msg) => {
-				const reactions = await Reaction.find({ messageId: msg._id });
-				return { ...msg.toObject(), reactions };
+				const reactions = await Reaction.find({ messageId: msg._id }).lean();
+				return { ...msg, reactions };
 			})
 		);
-
-		return res.status(Status.SUCCESS).json({
-			messages: messagesWithReactions,
-			length: messagesWithReactions.length,
-		});
+		*/
+		return res.status(Status.SUCCESS).json(groupMessages);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}

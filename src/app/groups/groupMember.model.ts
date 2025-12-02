@@ -11,6 +11,7 @@ const groupMemberSchema = new Schema(
 		userId: {
 			type: SchemaTypes.ObjectId,
 			required: true,
+			ref: 'User'
 		},
 		groupId: {
 			type: SchemaTypes.ObjectId,
@@ -20,6 +21,7 @@ const groupMemberSchema = new Schema(
 			type: SchemaTypes.String,
 			enum: ['admin', 'member'],
 			required: true,
+			default: 'member'
 		},
 	},
 	{ timestamps: true }

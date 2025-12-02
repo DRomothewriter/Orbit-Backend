@@ -2,8 +2,11 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import * as groupcontroller from './group.controller';
-
+import { uploadS3 } from '../middlewares/s3';
+import isGroupAdmin from '../middlewares/isGroupAdmin';
 const router = Router();
+
+router.get('/all-my-groups', authMiddleware, groupcontroller.getAllMyGroups);
 /**
  * @swagger
  * /groups/my-groups:
@@ -14,7 +17,9 @@ const router = Router();
  *          description: Lista de Grupos
  */
 router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
-
+router.get('/my-community-groups/:communityId', authMiddleware, groupcontroller.getMyCommunityGroups);
+router.get('/my-group-member/:groupId', authMiddleware, groupcontroller.getMyGroupMember);
+router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMembers);
 /**
  * @swagger
  * /groups/{groupId}:
@@ -69,7 +74,7 @@ router.post('/', authMiddleware, groupcontroller.createGroup);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
+router.post('/add-groupmembers', authMiddleware, isGroupAdmin, groupcontroller.addMembers);
 
 /**
  * @swagger
@@ -93,8 +98,10 @@ router.post('/add-groupmember', authMiddleware, groupcontroller.addMember);
  *       200:
  *         description: Grupo actualizado
  */
-router.put('/change-group-info', authMiddleware, groupcontroller.changeGroupInfo);
-
+router.put('/change-group-info', authMiddleware, isGroupAdmin, groupcontroller.changeGroupInfo);
+router.put('/edit-topic/:groupId', authMiddleware, isGroupAdmin, groupcontroller.editTopic);
+router.put('/edit-group-image/:groupId', authMiddleware, isGroupAdmin, uploadS3.single('image'), groupcontroller.editGroupImg);
+router.put('/:groupId/make-admin/:groupMemberId', authMiddleware, isGroupAdmin, groupcontroller.makeGroupAdmin)
 /**
  * @swagger
  * /groups/{groupId}:
@@ -110,7 +117,7 @@ router.put('/change-group-info', authMiddleware, groupcontroller.changeGroupInfo
  *       200:
  *         description: Grupo eliminado
  */
-router.delete('/:groupId', authMiddleware, groupcontroller.deleteGroup);
+router.delete('/:groupId', authMiddleware, isGroupAdmin, groupcontroller.deleteGroup);
 
 /**
  * @swagger
@@ -132,6 +139,7 @@ router.delete('/:groupId', authMiddleware, groupcontroller.deleteGroup);
  *       200:
  *         description: Miembro eliminado
  */
-router.delete('/:groupId/remove-member/:userId', authMiddleware, groupcontroller.deleteGroupMember);
+router.delete('/:groupId/remove-member/:groupMemberId', authMiddleware, isGroupAdmin, groupcontroller.deleteGroupMember);
 
+router.delete('/:groupId/leave-group', authMiddleware, groupcontroller.leaveGroup);
 export default router;

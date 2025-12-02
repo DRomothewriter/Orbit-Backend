@@ -14,7 +14,7 @@ const router = Router();
  *         description: Lista de communitys
  */
 router.get('/my-communities', authMiddleware, communityController.getMyCommunities);
-
+router.get('/community-members/:communityId', authMiddleware, communityController.getCommunityMembers)
 /**
  * @swagger
  * /communitys/{communityId}:
@@ -70,7 +70,7 @@ router.post('/', authMiddleware, communityController.createCommunity);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-communityMember', authMiddleware, communityController.addCommunityMember);
+router.post('/add-communityMembers', authMiddleware, communityController.addCommunityMembers);
 
 /**
  * @swagger

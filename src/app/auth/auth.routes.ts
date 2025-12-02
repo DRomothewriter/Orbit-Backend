@@ -3,6 +3,7 @@ import { login, signup, verifyEmail, verifyEmailByLink, forgotPassword, resetPas
 import { OAuth2Client } from 'google-auth-library';
 import User from '../users/user.model'; // Ajusta la ruta según tu proyecto
 import jwt from 'jsonwebtoken';
+import Status from '../interfaces/Status';
 
 const router = Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -73,6 +74,7 @@ router.post('/google', async (req, res) => {
 			user = await User.create({
 				email: payload?.email,
 				username: payload?.name,
+				profileImgUrl: payload?.picture
 			});
 		}
 
@@ -81,10 +83,9 @@ router.post('/google', async (req, res) => {
 			process.env.JWT_SECRET,
 			{ expiresIn: '1d' }
 		);
-
-		res.status(200).json({token, user});
+		return res.status(Status.SUCCESS).json({token, user});
 	} catch (err) {
-		res.status(401).json({ error: 'Token de Google inválido' });
+		return res.status(Status.UNAUTHORIZED).json({ error: 'Token de Google inválido' });
 	}
 });
 
