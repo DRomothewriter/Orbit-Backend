@@ -68,7 +68,7 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               Gracias por registrarte en Orbit. Para completar tu registro, verifica tu cuenta haciendo clic en el botón de abajo:
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3001'}/verify?email=${encodeURIComponent(userEmail)}&code=${code}" 
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/verify-email?email=${encodeURIComponent(userEmail)}&code=${code}" 
                  style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 Verificar Cuenta
               </a>
@@ -92,7 +92,7 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para crear una nueva:
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password?token=${token}" 
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/reset-password?token=${token}" 
                  style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 Restablecer Contraseña
               </a>
@@ -125,7 +125,7 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               <li>🚀 Y mucho más...</li>
             </ul>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3001'}/login" 
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/login" 
                  style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 Iniciar Sesión
               </a>

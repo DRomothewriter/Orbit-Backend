@@ -55,9 +55,7 @@ export const signup = async (req: Request, res: Response) => {
         if (!emailSent) {
             // Email sending failed - could implement logging here
         }
-        
-        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET!, {expiresIn: '24h'});
-        
+                
         return res.status(Status.CREATED).json({
             message: 'Usuario creado exitosamente. Revisa tu correo para verificar tu cuenta.',
             user: {
@@ -199,9 +197,9 @@ export const verifyEmailByLink = async (req: Request, res: Response) => {
         });
         
         // Redirigir al frontend con mensaje de éxito
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/login?verified=true`);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4200'}/login?verified=true`);
     } catch (e) {
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/login?error=verification_failed`);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4200'}/login?error=verification_failed`);
     }
 }
 
