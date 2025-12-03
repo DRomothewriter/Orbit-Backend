@@ -12,6 +12,12 @@ export const login = async (req: Request, res: Response) => {
         if(!user) return res.status(Status.UNAUTHORIZED).json({ error: "Invalid credentials"});
         const isValid = await bcrypt.compare(password, user.password);
         if(!isValid) return res.status(Status.UNAUTHORIZED).json({ error: "Invalid credentials"});
+        
+        if(!user.isVerified) {
+            return res.status(Status.FORBIDDEN).json({ 
+                error: "Email no verificado. Por favor verifica tu correo antes de iniciar sesión." 
+            });
+        }
         const token = jwt.sign({ id: user._id, email: user.email}, process.env.JWT_SECRET, {expiresIn: '24h'});
         return res.status(Status.SUCCESS).json({ token: token, user: user});
     }catch(e){
@@ -54,7 +60,6 @@ export const signup = async (req: Request, res: Response) => {
         
         return res.status(Status.CREATED).json({
             message: 'Usuario creado exitosamente. Revisa tu correo para verificar tu cuenta.',
-            token: token, 
             user: {
                 id: newUser._id,
                 username: newUser.username,
@@ -199,4 +204,41 @@ export const verifyEmailByLink = async (req: Request, res: Response) => {
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/login?error=verification_failed`);
     }
 }
+
+export const resendVerificationCode = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    
+    try {
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(Status.NOT_FOUND).json({ error: 'Usuario no encontrado' });
+        }
+        
+        if (user.isVerified) {
+            return res.status(Status.BAD_REQUEST).json({ error: 'El email ya está verificado' });
+        }
+        
+        // Generar nuevo código
+        const verificationCode = generateVerificationCode();
+        user.verificationCode = verificationCode;
+        await user.save();
+        
+        // Enviar correo con nuevo código
+        const emailSent = await sendAuthEmail({
+            userEmail: user.email,
+            userName: user.username,
+            code: verificationCode,
+            type: 'verification'
+        });
+        
+        return res.status(Status.SUCCESS).json({ 
+            message: 'Código de verificación reenviado exitosamente',
+            emailSent
+        });
+    } catch (e) {
+        return res.status(Status.INTERNAL_ERROR).json({error: "Server error", e})
+    }
+}
+
 

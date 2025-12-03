@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, signup, verifyEmail, verifyEmailByLink, forgotPassword, resetPassword } from './auth.controller';
+import { login, signup, verifyEmail, verifyEmailByLink, forgotPassword, resetPassword, resendVerificationCode } from './auth.controller';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../users/user.model'; // Ajusta la ruta según tu proyecto
 import jwt from 'jsonwebtoken';
@@ -137,6 +137,30 @@ router.get('/verify', verifyEmailByLink);
  *         description: Código inválido
  */
 router.post('/verify-email', verifyEmail);
+
+/**
+ * @swagger
+ * /auth/resend-verification:
+ *   post:
+ *     description: Reenviar código de verificación
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Código reenviado exitosamente
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.post('/resend-verification', resendVerificationCode);
 
 /**
  * @swagger
