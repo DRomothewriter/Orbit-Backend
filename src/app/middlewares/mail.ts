@@ -40,7 +40,7 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
       to: options.to,
       subject: options.subject,
       html: options.html,
-      text: options.text || options.html.replace(/<[^>]*>/g, ''), // Fallback texto plano
+      text: options.text || options.html.replace(/<[^>]*>/g, ''), 
     };
 
     await transporter.sendMail(mailOptions);
