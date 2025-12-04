@@ -7,24 +7,24 @@ export interface IGroupMember {
 }
 
 const groupMemberSchema = new Schema(
-	{
-		userId: {
-			type: SchemaTypes.ObjectId,
-			required: true,
-			ref: 'User'
-		},
-		groupId: {
-			type: SchemaTypes.ObjectId,
-			required: true,
-		},
-		role: {
-			type: SchemaTypes.String,
-			enum: ['admin', 'member'],
-			required: true,
-			default: 'member'
-		},
-	},
-	{ timestamps: true }
+  {
+    userId: {
+      type: SchemaTypes.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    groupId: {
+      type: SchemaTypes.ObjectId,
+      required: true,
+    },
+    role: {
+      type: SchemaTypes.String,
+      enum: ['admin', 'member'],
+      required: true,
+      default: 'member',
+    },
+  },
+  { timestamps: true },
 );
 
 const GroupMember = model<IGroupMember>('GroupMember', groupMemberSchema);

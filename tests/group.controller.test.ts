@@ -4,7 +4,7 @@ const mockGroup = {
   name: 'Test Group',
   description: 'Test group description',
   createdAt: new Date(),
-  save: jest.fn()
+  save: jest.fn(),
 };
 
 const mockGroupMember = {
@@ -12,7 +12,7 @@ const mockGroupMember = {
   userId: 'user-id-123',
   groupId: 'group-id-123',
   role: 'admin',
-  save: jest.fn()
+  save: jest.fn(),
 };
 
 const mockGroupFind = jest.fn();
@@ -22,17 +22,17 @@ const mockGroupMemberCreate = jest.fn();
 
 jest.mock('../src/app/groups/group.model', () => jest.fn().mockImplementation(() => ({
   ...mockGroup,
-  save: jest.fn().mockResolvedValue(mockGroup)
+  save: jest.fn().mockResolvedValue(mockGroup),
 })));
 
 jest.mock('../src/app/groups/groupMember.model', () => jest.fn().mockImplementation(() => ({
   ...mockGroupMember,
-  save: jest.fn().mockResolvedValue(mockGroupMember)
+  save: jest.fn().mockResolvedValue(mockGroupMember),
 })));
 
 jest.mock('../src/app/messages/message.model', () => ({
   find: jest.fn(),
-  deleteMany: jest.fn()
+  deleteMany: jest.fn(),
 }));
 
 // Mock the static methods
@@ -54,12 +54,12 @@ describe('Group Controller', () => {
     mockReq = {
       params: {},
       body: {},
-      user: { id: 'user-id-123' }
+      user: { id: 'user-id-123' },
     };
 
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
 
     jest.clearAllMocks();
@@ -69,12 +69,12 @@ describe('Group Controller', () => {
     it('should get user groups successfully', async () => {
       const mockGroupMembers = [
         { groupId: 'group-1', userId: 'user-id-123' },
-        { groupId: 'group-2', userId: 'user-id-123' }
+        { groupId: 'group-2', userId: 'user-id-123' },
       ];
 
       const mockUserGroups = [
         { _id: 'group-1', name: 'Group 1' },
-        { _id: 'group-2', name: 'Group 2' }
+        { _id: 'group-2', name: 'Group 2' },
       ];
 
       mockGroupMemberFind.mockResolvedValue(mockGroupMembers);
@@ -84,7 +84,7 @@ describe('Group Controller', () => {
 
       expect(mockGroupMemberFind).toHaveBeenCalledWith({ userId: 'user-id-123' });
       expect(mockGroupFind).toHaveBeenCalledWith({ 
-        _id: { $in: ['group-1', 'group-2'] } 
+        _id: { $in: ['group-1', 'group-2'] }, 
       });
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(mockUserGroups);
@@ -108,7 +108,7 @@ describe('Group Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Server error',
-        e: expect.any(Error)
+        e: expect.any(Error),
       });
     });
   });
@@ -151,9 +151,9 @@ describe('Group Controller', () => {
     const validGroupData = {
       group: {
         name: 'New Test Group',
-        description: 'A new test group'
+        description: 'A new test group',
       },
-      initialMembersIds: ['member-1', 'member-2']
+      initialMembersIds: ['member-1', 'member-2'],
     };
 
     beforeEach(() => {
@@ -165,7 +165,7 @@ describe('Group Controller', () => {
 
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
-        newGroup: expect.any(Object)
+        newGroup: expect.any(Object),
       });
     });
 
@@ -176,7 +176,7 @@ describe('Group Controller', () => {
       expect(GroupMemberModel).toHaveBeenCalledWith({
         userId: 'user-id-123',
         groupId: expect.any(String),
-        role: 'admin'
+        role: 'admin',
       });
     });
 
@@ -198,7 +198,7 @@ describe('Group Controller', () => {
     it('should handle empty initial members', async () => {
       mockReq.body = {
         group: validGroupData.group,
-        initialMembersIds: []
+        initialMembersIds: [],
       };
 
       await createGroup(mockReq, mockRes);
@@ -269,9 +269,9 @@ describe('Group Controller', () => {
       const mockReqData = {
         body: {
           group: { name: 'Test Group' },
-          initialMembersIds: []
+          initialMembersIds: [],
         },
-        user: { id: 'creator-id' }
+        user: { id: 'creator-id' },
       };
 
       // In real implementation, creator should always be admin
@@ -282,7 +282,7 @@ describe('Group Controller', () => {
       const userRoles = {
         'admin': ['create', 'delete', 'edit', 'invite', 'kick'],
         'moderator': ['edit', 'invite', 'kick'],
-        'member': ['view', 'message']
+        'member': ['view', 'message'],
       };
 
       expect(userRoles.admin).toContain('create');
@@ -295,13 +295,13 @@ describe('Group Controller', () => {
     it('should handle group creation failures', async () => {
       mockReq.body = {
         group: { name: 'Test' },
-        initialMembersIds: ['member-1']
+        initialMembersIds: ['member-1'],
       };
 
       // Mock save to fail
       const FailingGroupModel = require('../src/app/groups/group.model');
       FailingGroupModel.mockImplementation(() => ({
-        save: jest.fn().mockRejectedValue(new Error('Save failed'))
+        save: jest.fn().mockRejectedValue(new Error('Save failed')),
       }));
 
       await createGroup(mockReq, mockRes);
@@ -312,7 +312,7 @@ describe('Group Controller', () => {
     it('should handle member addition failures', async () => {
       mockReq.body = {
         group: { name: 'Test Group' },
-        initialMembersIds: ['invalid-member-id']
+        initialMembersIds: ['invalid-member-id'],
       };
 
       await createGroup(mockReq, mockRes);

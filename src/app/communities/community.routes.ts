@@ -14,7 +14,7 @@ const router = Router();
  *         description: Lista de communitys
  */
 router.get('/my-communities', authMiddleware, communityController.getMyCommunities);
-router.get('/community-members/:communityId', authMiddleware, communityController.getCommunityMembers)
+router.get('/community-members/:communityId', authMiddleware, communityController.getCommunityMembers);
 /**
  * @swagger
  * /communitys/{communityId}:
@@ -30,7 +30,7 @@ router.get('/community-members/:communityId', authMiddleware, communityControlle
  *       200:
  *         description: Información del equipo
  */
-router.get('/:communityId', authMiddleware, communityController.getCommunityById)
+router.get('/:communityId', authMiddleware, communityController.getCommunityById);
 
 /**
  * @swagger

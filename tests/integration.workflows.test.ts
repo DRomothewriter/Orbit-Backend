@@ -5,7 +5,7 @@ describe('Integration Tests - User Registration Flow', () => {
     username: 'testuser',
     email: 'test@example.com',
     isVerified: false,
-    verificationCode: '123456'
+    verificationCode: '123456',
   };
 
   describe('Complete Registration Workflow', () => {
@@ -14,14 +14,14 @@ describe('Integration Tests - User Registration Flow', () => {
       const signupData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       // Mock signup success
       const signupResult = {
         success: true,
         user: { ...mockUser, username: signupData.name },
-        message: 'User registered successfully'
+        message: 'User registered successfully',
       };
 
       expect(signupResult.success).toBe(true);
@@ -31,12 +31,12 @@ describe('Integration Tests - User Registration Flow', () => {
       // Step 2: Email verification
       const verificationData = {
         email: signupData.email,
-        code: '123456'
+        code: '123456',
       };
 
       const verificationResult = {
         success: true,
-        message: 'Email verified successfully'
+        message: 'Email verified successfully',
       };
 
       expect(verificationResult.success).toBe(true);
@@ -44,13 +44,13 @@ describe('Integration Tests - User Registration Flow', () => {
       // Step 3: Login attempt
       const loginData = {
         email: signupData.email,
-        password: signupData.password
+        password: signupData.password,
       };
 
       const loginResult = {
         success: true,
         token: 'jwt-token-123',
-        user: { ...mockUser, isVerified: true }
+        user: { ...mockUser, isVerified: true },
       };
 
       expect(loginResult.success).toBe(true);
@@ -62,7 +62,7 @@ describe('Integration Tests - User Registration Flow', () => {
       const duplicateEmailResult = {
         success: false,
         error: 'User already exists',
-        status: 409
+        status: 409,
       };
 
       expect(duplicateEmailResult.success).toBe(false);
@@ -73,7 +73,7 @@ describe('Integration Tests - User Registration Flow', () => {
       const unverifiedLoginResult = {
         success: false,
         error: 'Email not verified',
-        status: 403
+        status: 403,
       };
 
       expect(unverifiedLoginResult.success).toBe(false);
@@ -85,12 +85,12 @@ describe('Integration Tests - User Registration Flow', () => {
     it('should complete password reset flow', async () => {
       // Step 1: Request password reset
       const resetRequestData = {
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       const resetRequestResult = {
         success: true,
-        message: 'Reset instructions sent to email'
+        message: 'Reset instructions sent to email',
       };
 
       expect(resetRequestResult.success).toBe(true);
@@ -99,12 +99,12 @@ describe('Integration Tests - User Registration Flow', () => {
       const resetData = {
         email: resetRequestData.email,
         token: 'reset-token-123',
-        newPassword: 'NewPassword123!'
+        newPassword: 'NewPassword123!',
       };
 
       const resetResult = {
         success: true,
-        message: 'Password reset successfully'
+        message: 'Password reset successfully',
       };
 
       expect(resetResult.success).toBe(true);
@@ -113,7 +113,7 @@ describe('Integration Tests - User Registration Flow', () => {
       const newLoginResult = {
         success: true,
         token: 'new-jwt-token',
-        user: mockUser
+        user: mockUser,
       };
 
       expect(newLoginResult.success).toBe(true);
@@ -124,7 +124,7 @@ describe('Integration Tests - User Registration Flow', () => {
       const invalidResetResult = {
         success: false,
         error: 'Invalid or expired reset token',
-        status: 400
+        status: 400,
       };
 
       expect(invalidResetResult.success).toBe(false);
@@ -137,7 +137,7 @@ describe('Integration Tests - Messaging Workflow', () => {
   const mockGroup = {
     _id: 'group-id-123',
     name: 'Test Group',
-    members: ['user-1', 'user-2', 'user-3']
+    members: ['user-1', 'user-2', 'user-3'],
   };
 
   describe('Group Creation and Messaging', () => {
@@ -146,13 +146,13 @@ describe('Integration Tests - Messaging Workflow', () => {
       const groupData = {
         name: 'Test Group',
         description: 'A test group',
-        initialMembers: ['user-2', 'user-3']
+        initialMembers: ['user-2', 'user-3'],
       };
 
       const groupCreationResult = {
         success: true,
         group: mockGroup,
-        groupId: 'group-id-123'
+        groupId: 'group-id-123',
       };
 
       expect(groupCreationResult.success).toBe(true);
@@ -162,7 +162,7 @@ describe('Integration Tests - Messaging Workflow', () => {
       const messageData = {
         type: 'text',
         text: 'Welcome to the group!',
-        groupId: groupCreationResult.groupId
+        groupId: groupCreationResult.groupId,
       };
 
       const messageResult = {
@@ -171,8 +171,8 @@ describe('Integration Tests - Messaging Workflow', () => {
           _id: 'message-id-123',
           ...messageData,
           userId: 'user-1',
-          createdAt: new Date()
-        }
+          createdAt: new Date(),
+        },
       };
 
       expect(messageResult.success).toBe(true);
@@ -182,7 +182,7 @@ describe('Integration Tests - Messaging Workflow', () => {
       const messagesResult = {
         success: true,
         messages: [messageResult.message],
-        length: 1
+        length: 1,
       };
 
       expect(messagesResult.messages).toHaveLength(1);
@@ -196,7 +196,7 @@ describe('Integration Tests - Messaging Workflow', () => {
         groupId: 'group-id-123',
         fileUrl: 'https://example.com/document.pdf',
         fileName: 'document.pdf',
-        fileSize: 1024000
+        fileSize: 1024000,
       };
 
       const fileMessageResult = {
@@ -204,8 +204,8 @@ describe('Integration Tests - Messaging Workflow', () => {
         message: {
           _id: 'file-message-id',
           ...fileMessageData,
-          userId: 'user-1'
-        }
+          userId: 'user-1',
+        },
       };
 
       expect(fileMessageResult.success).toBe(true);
@@ -218,14 +218,14 @@ describe('Integration Tests - Messaging Workflow', () => {
     it('should simulate socket.io message broadcasting', () => {
       const mockSocket = {
         to: jest.fn().mockReturnThis(),
-        emit: jest.fn()
+        emit: jest.fn(),
       };
 
       const groupId = 'group-id-123';
       const message = {
         _id: 'message-id',
         text: 'Real-time message',
-        userId: 'user-1'
+        userId: 'user-1',
       };
 
       // Simulate socket emission
@@ -243,7 +243,7 @@ describe('Integration Tests - Messaging Workflow', () => {
         activeUsers.set(userId, {
           socketId: `socket-${userId}`,
           lastSeen: new Date(),
-          status: 'online'
+          status: 'online',
         });
       });
 
@@ -259,7 +259,7 @@ describe('Integration Tests - User Management', () => {
       const profileUpdateData = {
         username: 'updateduser',
         status: 'working',
-        profileImageUrl: 'https://example.com/new-avatar.jpg'
+        profileImageUrl: 'https://example.com/new-avatar.jpg',
       };
 
       const updateResult = {
@@ -267,8 +267,8 @@ describe('Integration Tests - User Management', () => {
         user: {
           _id: 'user-id-123',
           email: 'test@example.com',
-          ...profileUpdateData
-        }
+          ...profileUpdateData,
+        },
       };
 
       expect(updateResult.success).toBe(true);
@@ -281,7 +281,7 @@ describe('Integration Tests - User Management', () => {
       const searchTerm = 'john';
       const searchResults = [
         { _id: 'user-2', username: 'john_doe', email: 'john@example.com' },
-        { _id: 'user-3', username: 'johnny', email: 'johnny@example.com' }
+        { _id: 'user-3', username: 'johnny', email: 'johnny@example.com' },
       ];
 
       expect(searchResults).toHaveLength(2);
@@ -290,12 +290,12 @@ describe('Integration Tests - User Management', () => {
       // Step 2: Send friend request
       const friendRequestData = {
         requesterId: 'user-1',
-        receiverId: 'user-2'
+        receiverId: 'user-2',
       };
 
       const friendRequestResult = {
         success: true,
-        message: 'Friend request sent'
+        message: 'Friend request sent',
       };
 
       expect(friendRequestResult.success).toBe(true);
@@ -307,8 +307,8 @@ describe('Integration Tests - User Management', () => {
         friendship: {
           user1: 'user-1',
           user2: 'user-2',
-          status: 'accepted'
-        }
+          status: 'accepted',
+        },
       };
 
       expect(acceptRequestResult.friendship.status).toBe('accepted');
@@ -323,18 +323,18 @@ describe('Integration Tests - Error Handling', () => {
         {
           field: 'email',
           message: 'Invalid email format',
-          status: 400
+          status: 400,
         },
         {
           field: 'password',
           message: 'Password must be at least 8 characters',
-          status: 400
+          status: 400,
         },
         {
           field: 'username',
           message: 'Username already taken',
-          status: 409
-        }
+          status: 409,
+        },
       ];
 
       validationErrors.forEach(error => {
@@ -350,7 +350,7 @@ describe('Integration Tests - Error Handling', () => {
         { message: 'Token required', status: 401 },
         { message: 'Invalid token', status: 401 },
         { message: 'Token expired', status: 401 },
-        { message: 'Insufficient permissions', status: 403 }
+        { message: 'Insufficient permissions', status: 403 },
       ];
 
       authErrors.forEach(error => {
@@ -363,7 +363,7 @@ describe('Integration Tests - Error Handling', () => {
       const serverErrors = [
         { message: 'Internal server error', status: 500 },
         { message: 'Database connection failed', status: 500 },
-        { message: 'Service unavailable', status: 503 }
+        { message: 'Service unavailable', status: 503 },
       ];
 
       serverErrors.forEach(error => {
@@ -381,12 +381,12 @@ describe('Integration Tests - Error Handling', () => {
         _id: 'msg-1', 
         userId: 'user-1', 
         groupId: 'group-1',
-        text: 'Hello' 
+        text: 'Hello', 
       };
       const group = { 
         _id: 'group-1', 
         name: 'Test Group',
-        members: ['user-1'] 
+        members: ['user-1'], 
       };
 
       // Verify relationships
@@ -399,14 +399,14 @@ describe('Integration Tests - Error Handling', () => {
       const operations = [
         { type: 'create_message', timestamp: Date.now() },
         { type: 'update_user', timestamp: Date.now() + 1 },
-        { type: 'delete_group', timestamp: Date.now() + 2 }
+        { type: 'delete_group', timestamp: Date.now() + 2 },
       ];
 
       // Simulate concurrent execution
       const results = await Promise.all(
         operations.map(async (op) => {
           return { ...op, success: true };
-        })
+        }),
       );
 
       expect(results).toHaveLength(3);
@@ -435,7 +435,7 @@ describe('Integration Tests - Error Handling', () => {
         email: 254,
         message: 1000,
         groupName: 100,
-        description: 500
+        description: 500,
       };
 
       const inputs = {
@@ -443,7 +443,7 @@ describe('Integration Tests - Error Handling', () => {
         email: 'test@example.com',
         message: 'Hello world!',
         groupName: 'My Group',
-        description: 'A test group'
+        description: 'A test group',
       };
 
       Object.keys(inputs).forEach(key => {

@@ -1,7 +1,7 @@
 // filepath: [task.routes.ts](http://_vscodecontentref_/0)
-import { Router } from "express";
-import * as taskController from "./task.controller"
-import { authMiddleware } from "../middlewares/auth";
+import { Router } from 'express';
+import * as taskController from './task.controller';
+import { authMiddleware } from '../middlewares/auth';
 const router = Router();
 
 /**
@@ -26,7 +26,7 @@ const router = Router();
  *       400:
  *         description: Error en la solicitud
  */
-router.post("/", authMiddleware, taskController.createTask);
+router.post('/', authMiddleware, taskController.createTask);
 
 /**
  * @swagger
@@ -46,7 +46,7 @@ router.post("/", authMiddleware, taskController.createTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.get("/:taskId", authMiddleware, taskController.viewTaskById)
+router.get('/:taskId', authMiddleware, taskController.viewTaskById);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.get("/:taskId", authMiddleware, taskController.viewTaskById)
  *       400:
  *         description: Error en la solicitud
  */
-router.put("/modifyTask", authMiddleware, taskController.modifyTask);
+router.put('/modifyTask', authMiddleware, taskController.modifyTask);
 
 /**
  * @swagger
@@ -92,6 +92,6 @@ router.put("/modifyTask", authMiddleware, taskController.modifyTask);
  *       404:
  *         description: Tarea no encontrada
  */
-router.delete("/:taskId", authMiddleware, taskController.deleteTask);
+router.delete('/:taskId', authMiddleware, taskController.deleteTask);
 
 export default router;

@@ -11,8 +11,8 @@ const mockMessage = {
   toObject: jest.fn().mockReturnValue({
     _id: 'message-id-123',
     type: 'text',
-    text: 'Test message'
-  })
+    text: 'Test message',
+  }),
 };
 
 const mockFind = jest.fn();
@@ -21,22 +21,22 @@ const mockMessageCreate = jest.fn();
 
 jest.mock('../src/app/messages/message.model', () => jest.fn().mockImplementation(() => ({
   ...mockMessage,
-  save: jest.fn().mockResolvedValue(mockMessage)
+  save: jest.fn().mockResolvedValue(mockMessage),
 })));
 
 jest.mock('../src/app/messages/reaction.model', () => ({
-  find: jest.fn().mockResolvedValue([])
+  find: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('../src/app/groups/group.service', () => ({
   getGroupMembers: jest.fn().mockResolvedValue([
     { userId: 'user-1', username: 'user1' },
-    { userId: 'user-2', username: 'user2' }
-  ])
+    { userId: 'user-2', username: 'user2' },
+  ]),
 }));
 
 jest.mock('../src/app/notifications/notification.service', () => ({
-  notifyUsers: jest.fn()
+  notifyUsers: jest.fn(),
 }));
 
 // Mock the actual static methods
@@ -55,11 +55,11 @@ describe('Message Controller', () => {
   beforeEach(() => {
     mockIo = {
       to: jest.fn().mockReturnThis(),
-      emit: jest.fn()
+      emit: jest.fn(),
     };
 
     mockApp = {
-      get: jest.fn().mockReturnValue(mockIo)
+      get: jest.fn().mockReturnValue(mockIo),
     };
 
     mockReq = {
@@ -67,12 +67,12 @@ describe('Message Controller', () => {
       query: {},
       body: {},
       user: { id: 'user-id-123' },
-      app: mockApp
+      app: mockApp,
     };
 
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
 
     jest.clearAllMocks();
@@ -86,13 +86,13 @@ describe('Message Controller', () => {
     it('should get group messages successfully', async () => {
       const mockMessages = [
         { ...mockMessage, _id: 'msg1', text: 'Message 1' },
-        { ...mockMessage, _id: 'msg2', text: 'Message 2' }
+        { ...mockMessage, _id: 'msg2', text: 'Message 2' },
       ];
 
       mockFind.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockMessages)
+        limit: jest.fn().mockResolvedValue(mockMessages),
       });
 
       await getGroupMessages(mockReq, mockRes);
@@ -101,7 +101,7 @@ describe('Message Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         messages: expect.any(Array),
-        length: expect.any(Number)
+        length: expect.any(Number),
       });
     });
 
@@ -111,7 +111,7 @@ describe('Message Controller', () => {
       mockFind.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([])
+        limit: jest.fn().mockResolvedValue([]),
       });
 
       await getGroupMessages(mockReq, mockRes);
@@ -123,7 +123,7 @@ describe('Message Controller', () => {
       mockFind.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockRejectedValue(new Error('Database error'))
+        limit: jest.fn().mockRejectedValue(new Error('Database error')),
       });
 
       await getGroupMessages(mockReq, mockRes);
@@ -131,7 +131,7 @@ describe('Message Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Server error',
-        e: expect.any(Error)
+        e: expect.any(Error),
       });
     });
   });
@@ -175,8 +175,8 @@ describe('Message Controller', () => {
         type: 'text',
         text: 'Test message content',
         groupId: 'group-id-123',
-        username: 'testuser'
-      }
+        username: 'testuser',
+      },
     };
 
     beforeEach(() => {
@@ -191,7 +191,7 @@ describe('Message Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         newMessage: expect.any(Object),
-        messageId: expect.any(String)
+        messageId: expect.any(String),
       });
     });
 
@@ -259,8 +259,8 @@ describe('Message Controller', () => {
           username: 'testuser',
           fileUrl: 'https://example.com/document.pdf',
           fileName: 'document.pdf',
-          fileSize: 1024000
-        }
+          fileSize: 1024000,
+        },
       };
 
       mockReq.body = fileMessageData;

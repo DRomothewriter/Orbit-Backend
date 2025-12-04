@@ -11,7 +11,7 @@ describe('Authentication Validation', () => {
         'user.name@domain.co.uk',
         'user+tag@example.org',
         'user123@test-domain.com',
-        'a@b.co'
+        'a@b.co',
       ];
 
       validEmails.forEach(email => {
@@ -26,7 +26,7 @@ describe('Authentication Validation', () => {
         'user@',
         'user..name@domain.com',
         'user@domain..com',
-        ''
+        '',
       ];
 
       invalidEmails.forEach(email => {
@@ -47,7 +47,7 @@ describe('Authentication Validation', () => {
         'Password123',
         'MySecret123',
         'Test@123',
-        'StrongPass1'
+        'StrongPass1',
       ];
 
       validPasswords.forEach(password => {
@@ -61,7 +61,7 @@ describe('Authentication Validation', () => {
         'PASSWORD123', // no lowercase
         'Password', // no number
         'Pass1', // too short
-        '12345678' // no letters
+        '12345678', // no letters
       ];
 
       invalidPasswords.forEach(password => {
@@ -83,7 +83,7 @@ describe('Authentication Validation', () => {
         'test_user',
         'user-name',
         'John_Doe',
-        'username123'
+        'username123',
       ];
 
       validUsernames.forEach(username => {
@@ -98,7 +98,7 @@ describe('Authentication Validation', () => {
         'user@name', // invalid character
         'user name', // space
         'user.name', // dot
-        ''
+        '',
       ];
 
       invalidUsernames.forEach(username => {
@@ -119,7 +119,7 @@ describe('Message Validation', () => {
         'Hello world!',
         'This is a test message.',
         'A'.repeat(999), // Max length - 1
-        '   Hello   ' // With whitespace
+        '   Hello   ', // With whitespace
       ];
 
       validContent.forEach(content => {
@@ -131,7 +131,7 @@ describe('Message Validation', () => {
       const invalidContent = [
         '', // Empty
         '   ', // Only whitespace
-        'A'.repeat(1001) // Too long
+        'A'.repeat(1001), // Too long
       ];
 
       invalidContent.forEach(content => {
@@ -160,7 +160,7 @@ describe('Message Validation', () => {
         'invalid',
         '',
         'TEXT', // Case sensitive
-        'File'
+        'File',
       ];
 
       invalidTypes.forEach(type => {
@@ -181,7 +181,7 @@ describe('Message Validation', () => {
         1024, // 1KB
         1024 * 1024, // 1MB
         5 * 1024 * 1024, // 5MB
-        maxFileSize // Exactly max size
+        maxFileSize, // Exactly max size
       ];
 
       validSizes.forEach(size => {
@@ -194,7 +194,7 @@ describe('Message Validation', () => {
         0,
         -1024,
         maxFileSize + 1, // Over limit
-        50 * 1024 * 1024 // Way over limit
+        50 * 1024 * 1024, // Way over limit
       ];
 
       invalidSizes.forEach(size => {
@@ -215,7 +215,7 @@ describe('Utility Functions', () => {
       const validIds = [
         '507f1f77bcf86cd799439011',
         '123456789012345678901234',
-        'abcdef123456789012345678'
+        'abcdef123456789012345678',
       ];
 
       validIds.forEach(id => {
@@ -229,7 +229,7 @@ describe('Utility Functions', () => {
         '507f1f77bcf86cd7994390111', // Too long
         'invalid-object-id',
         '507f1f77bcf86cd79943901g', // Invalid character
-        ''
+        '',
       ];
 
       invalidIds.forEach(id => {
@@ -275,7 +275,7 @@ describe('Utility Functions', () => {
         { input: '  hello world  ', expected: 'hello world' },
         { input: '<script>alert("xss")</script>', expected: 'scriptalert("xss")/script' },
         { input: 'Normal text', expected: 'Normal text' },
-        { input: '   <div>content</div>   ', expected: 'divcontent/div' }
+        { input: '   <div>content</div>   ', expected: 'divcontent/div' },
       ];
 
       testCases.forEach(({ input, expected }) => {

@@ -3,8 +3,8 @@ import { generateVerificationCode, generateResetToken } from '../src/app/middlew
 // Mock nodemailer for this specific test
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn().mockReturnValue({
-    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' })
-  })
+    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+  }),
 }));
 
 describe('Mail Utilities', () => {

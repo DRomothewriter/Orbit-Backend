@@ -6,8 +6,8 @@ jest.mock('mongoose', () => ({
     ObjectId: 'ObjectId',
     String: 'String',
     Boolean: 'Boolean',
-    Date: 'Date'
-  }
+    Date: 'Date',
+  },
 }));
 
 // Mock User model and dependencies
@@ -16,7 +16,7 @@ const mockUser = {
   username: 'testuser',
   email: 'test@example.com',
   status: 'online',
-  profileImgUrl: 'https://example.com/avatar.jpg'
+  profileImgUrl: 'https://example.com/avatar.jpg',
 };
 
 const mockUserFind = jest.fn();
@@ -28,29 +28,29 @@ jest.mock('../src/app/users/user.model', () => ({
   find: mockUserFind,
   findById: mockUserFindById,
   create: mockUserCreate,
-  updateOne: mockUserUpdateOne
+  updateOne: mockUserUpdateOne,
 }));
 
 jest.mock('../src/app/users/friendship.model', () => ({
   find: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),
-  deleteOne: jest.fn()
+  deleteOne: jest.fn(),
 }));
 
 jest.mock('../src/app/notifications/notification.service', () => ({
-  notifyUser: jest.fn()
+  notifyUser: jest.fn(),
 }));
 
 jest.mock('../src/app/middlewares/s3', () => ({
-  deleteImageFromS3: jest.fn()
+  deleteImageFromS3: jest.fn(),
 }));
 
 import { 
   getAllUsers, 
   getMyUser, 
   getUserById, 
-  searchUsers 
+  searchUsers, 
 } from '../src/app/users/user.controller';
 
 describe('User Controller', () => {
@@ -62,12 +62,12 @@ describe('User Controller', () => {
       params: {},
       query: {},
       body: {},
-      user: { id: 'user-id-123' }
+      user: { id: 'user-id-123' },
     };
 
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
 
     jest.clearAllMocks();
@@ -77,11 +77,11 @@ describe('User Controller', () => {
     it('should get all users successfully', async () => {
       const mockUsers = [
         { _id: 'user-1', username: 'user1' },
-        { _id: 'user-2', username: 'user2' }
+        { _id: 'user-2', username: 'user2' },
       ];
 
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUsers)
+        select: jest.fn().mockResolvedValue(mockUsers),
       });
 
       await getAllUsers(mockReq, mockRes);
@@ -93,7 +93,7 @@ describe('User Controller', () => {
 
     it('should handle database errors', async () => {
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockRejectedValue(new Error('Database error'))
+        select: jest.fn().mockRejectedValue(new Error('Database error')),
       });
 
       await getAllUsers(mockReq, mockRes);
@@ -104,7 +104,7 @@ describe('User Controller', () => {
 
     it('should return only id and username fields', async () => {
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       await getAllUsers(mockReq, mockRes);
@@ -185,17 +185,17 @@ describe('User Controller', () => {
     it('should search users by username successfully', async () => {
       const searchResults = [
         { _id: 'user-1', username: 'testuser1', email: 'test1@example.com' },
-        { _id: 'user-2', username: 'testuser2', email: 'test2@example.com' }
+        { _id: 'user-2', username: 'testuser2', email: 'test2@example.com' },
       ];
 
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue(searchResults)
+        select: jest.fn().mockResolvedValue(searchResults),
       });
 
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: 'test', $options: 'i' }
+        username: { $regex: 'test', $options: 'i' },
       });
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(searchResults);
@@ -205,13 +205,13 @@ describe('User Controller', () => {
       mockReq.query.username = 'TEST';
 
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: 'TEST', $options: 'i' }
+        username: { $regex: 'TEST', $options: 'i' },
       });
     });
 
@@ -219,19 +219,19 @@ describe('User Controller', () => {
       mockReq.query.username = '';
 
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: '', $options: 'i' }
+        username: { $regex: '', $options: 'i' },
       });
     });
 
     it('should return only specific fields', async () => {
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       await searchUsers(mockReq, mockRes);
@@ -241,7 +241,7 @@ describe('User Controller', () => {
 
     it('should handle database errors', async () => {
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockRejectedValue(new Error('Database error'))
+        select: jest.fn().mockRejectedValue(new Error('Database error')),
       });
 
       await searchUsers(mockReq, mockRes);
@@ -282,7 +282,7 @@ describe('User Controller', () => {
       const validEmails = [
         'test@example.com',
         'user.name@domain.co.uk',
-        'user+tag@example.org'
+        'user+tag@example.org',
       ];
 
       validEmails.forEach(email => {
@@ -295,7 +295,7 @@ describe('User Controller', () => {
     it('should not return password in user data', async () => {
       const userWithPassword = {
         ...mockUser,
-        password: '$2b$10$hashedpassword'
+        password: '$2b$10$hashedpassword',
       };
       
       mockUserFindById.mockResolvedValue(userWithPassword);
@@ -304,7 +304,7 @@ describe('User Controller', () => {
 
       // In a real implementation, password should be excluded
       expect(mockRes.json).toHaveBeenCalledWith({ 
-        user: expect.any(Object)
+        user: expect.any(Object),
       });
     });
 
@@ -312,7 +312,7 @@ describe('User Controller', () => {
       const validUrls = [
         'https://example.com/avatar.jpg',
         'https://s3.amazonaws.com/bucket/image.png',
-        'https://cdn.example.com/profile/user123.gif'
+        'https://cdn.example.com/profile/user123.gif',
       ];
 
       validUrls.forEach(url => {
@@ -326,7 +326,7 @@ describe('User Controller', () => {
       const searchTerm = 'test';
 
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       mockReq.query = { term: searchTerm };
@@ -334,14 +334,14 @@ describe('User Controller', () => {
 
       expect(mockUserFind).toHaveBeenCalledWith({
         username: expect.objectContaining({
-          $options: 'i'
-        })
+          $options: 'i',
+        }),
       });
     });
 
     it('should limit fields returned in search', async () => {
       mockUserFind.mockReturnValue({
-        select: jest.fn().mockResolvedValue([])
+        select: jest.fn().mockResolvedValue([]),
       });
 
       await searchUsers(mockReq, mockRes);

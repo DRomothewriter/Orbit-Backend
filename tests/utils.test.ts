@@ -2,12 +2,12 @@
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
   verify: jest.fn(),
-  decode: jest.fn()
+  decode: jest.fn(),
 }));
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),
-  compare: jest.fn()
+  compare: jest.fn(),
 }));
 
 import * as jwt from 'jsonwebtoken';
@@ -250,7 +250,7 @@ describe('Utility Functions Tests', () => {
           'test@example.com',
           'user.name@domain.co.uk',
           'user+tag@example.org',
-          'firstname.lastname@company.com'
+          'firstname.lastname@company.com',
         ];
 
         validEmails.forEach(email => {
@@ -269,7 +269,7 @@ describe('Utility Functions Tests', () => {
           '@example.com',
           'user@',
           'user@domain',
-          'user name@example.com'
+          'user name@example.com',
         ];
 
         invalidEmails.forEach(email => {
@@ -294,7 +294,7 @@ describe('Utility Functions Tests', () => {
           'Password123!',
           'StrongPass1@',
           'MySecure#2023',
-          'Complex$Pass9'
+          'Complex$Pass9',
         ];
 
         strongPasswords.forEach(password => {
@@ -319,7 +319,7 @@ describe('Utility Functions Tests', () => {
           'PASSWORD',
           'Pass123',
           'password!',
-          'PASSWORD123'
+          'PASSWORD123',
         ];
 
         weakPasswords.forEach(password => {
@@ -340,7 +340,7 @@ describe('Utility Functions Tests', () => {
           'john_doe',
           'testUser',
           'user_name_123',
-          'USERNAME'
+          'USERNAME',
         ];
 
         validUsernames.forEach(username => {
@@ -361,7 +361,7 @@ describe('Utility Functions Tests', () => {
           'user-name', // contains hyphen
           'user@name', // contains @
           '123user!', // contains special char
-          ''
+          '',
         ];
 
         invalidUsernames.forEach(username => {
@@ -470,7 +470,7 @@ describe('Utility Functions Tests', () => {
               status: 400,
               message: 'Validation failed',
               field: error.path,
-              code: 'VALIDATION_ERROR'
+              code: 'VALIDATION_ERROR',
             };
           }
 
@@ -478,14 +478,14 @@ describe('Utility Functions Tests', () => {
             return {
               status: 400,
               message: 'Invalid ID format',
-              code: 'INVALID_ID'
+              code: 'INVALID_ID',
             };
           }
 
           return {
             status: 500,
             message: 'Internal server error',
-            code: 'INTERNAL_ERROR'
+            code: 'INTERNAL_ERROR',
           };
         };
 

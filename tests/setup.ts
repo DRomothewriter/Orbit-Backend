@@ -12,14 +12,14 @@ process.env.FRONTEND_URL = 'http://localhost:3001';
 // Mock nodemailer
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn().mockReturnValue({
-    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' })
-  })
+    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+  }),
 }));
 
 // Mock file upload paths
 jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
-  mkdirSync: jest.fn()
+  mkdirSync: jest.fn(),
 }));
 
 // Mock mongoose connection for tests that don't need real DB
@@ -28,8 +28,8 @@ jest.mock('mongoose', () => ({
   connection: {
     dropDatabase: jest.fn().mockResolvedValue({}),
     close: jest.fn().mockResolvedValue({}),
-    collections: {}
+    collections: {},
   },
   model: jest.fn(),
-  Schema: jest.fn().mockImplementation(() => ({}))
+  Schema: jest.fn().mockImplementation(() => ({})),
 }));

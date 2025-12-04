@@ -6,7 +6,7 @@ const mockUser = {
   password: '$2b$10$hashedpassword',
   isVerified: true,
   save: jest.fn(),
-  toObject: jest.fn()
+  toObject: jest.fn(),
 };
 
 const mockFindOne = jest.fn();
@@ -25,26 +25,26 @@ jest.mock('../src/app/users/user.model', () => {
         Object.assign(this, {
           _id: 'user-id-123',
           save: jest.fn().mockResolvedValue(true),
-          ...data
+          ...data,
         });
-      })
-    }
+      }),
+    },
   };
 });
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),
-  hash: jest.fn()
+  hash: jest.fn(),
 }));
 
 jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn()
+  sign: jest.fn(),
 }));
 
 jest.mock('../src/app/middlewares/mail', () => ({
   sendAuthEmail: jest.fn(),
   generateVerificationCode: jest.fn(),
-  generateResetToken: jest.fn()
+  generateResetToken: jest.fn(),
 }));
 
 import { login, signup } from '../src/app/auth/auth.controller';
@@ -64,11 +64,11 @@ describe('Auth Controller', () => {
 
   beforeEach(() => {
     mockReq = {
-      body: {}
+      body: {},
     };
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
     
     jest.clearAllMocks();
@@ -80,7 +80,7 @@ describe('Auth Controller', () => {
     const validSignupData = {
       name: 'Test User',
       email: 'test@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     };
 
     beforeEach(() => {
@@ -96,8 +96,8 @@ describe('Auth Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Server error'
-        })
+          error: 'Server error',
+        }),
       );
     });
 
@@ -108,8 +108,8 @@ describe('Auth Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Server error'
-        })
+          error: 'Server error',
+        }),
       );
     });
 
@@ -146,7 +146,7 @@ describe('Auth Controller', () => {
   describe('login', () => {
     const validLoginData = {
       email: 'test@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     };
 
     beforeEach(() => {

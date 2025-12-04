@@ -101,7 +101,7 @@ router.post('/add-groupmembers', authMiddleware, isGroupAdmin, groupcontroller.a
 router.put('/change-group-info', authMiddleware, isGroupAdmin, groupcontroller.changeGroupInfo);
 router.put('/edit-topic/:groupId', authMiddleware, isGroupAdmin, groupcontroller.editTopic);
 router.put('/edit-group-image/:groupId', authMiddleware, isGroupAdmin, uploadS3.single('image'), groupcontroller.editGroupImg);
-router.put('/:groupId/make-admin/:groupMemberId', authMiddleware, isGroupAdmin, groupcontroller.makeGroupAdmin)
+router.put('/:groupId/make-admin/:groupMemberId', authMiddleware, isGroupAdmin, groupcontroller.makeGroupAdmin);
 /**
  * @swagger
  * /groups/{groupId}:

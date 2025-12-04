@@ -1,21 +1,21 @@
 // Mock dependencies
 const mockJwt = {
   verify: jest.fn(),
-  sign: jest.fn()
+  sign: jest.fn(),
 };
 
 const mockUser = {
   _id: 'user-id-123',
   email: 'test@example.com',
   username: 'testuser',
-  isVerified: true
+  isVerified: true,
 };
 
 const mockUserFindById = jest.fn();
 
 jest.mock('jsonwebtoken', () => mockJwt);
 jest.mock('../src/app/users/user.model', () => ({
-  findById: mockUserFindById
+  findById: mockUserFindById,
 }));
 
 describe('Auth Middleware', () => {
@@ -26,12 +26,12 @@ describe('Auth Middleware', () => {
   beforeEach(() => {
     mockReq = {
       headers: {},
-      user: null
+      user: null,
     };
 
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
     };
 
     mockNext = jest.fn();
@@ -132,7 +132,7 @@ describe('Auth Middleware', () => {
     it('should include user information in token', () => {
       const userInfo = {
         id: mockUser._id,
-        email: mockUser.email
+        email: mockUser.email,
       };
 
       mockJwt.sign.mockReturnValue('token-with-user-info');
@@ -152,7 +152,7 @@ describe('Auth Middleware', () => {
       expect(mockJwt.sign).toHaveBeenCalledWith(
         payload, 
         'secret', 
-        { expiresIn: '24h' }
+        { expiresIn: '24h' },
       );
     });
   });
@@ -164,7 +164,7 @@ describe('Auth Middleware', () => {
         'Basic token',
         'Bearer',
         'token',
-        'bearer valid-token'
+        'bearer valid-token',
       ];
 
       expect(validHeader.startsWith('Bearer ')).toBe(true);
@@ -178,7 +178,7 @@ describe('Auth Middleware', () => {
       const headers = [
         'Bearer token',
         'bearer token',
-        'BEARER token'
+        'BEARER token',
       ];
 
       headers.forEach(header => {
@@ -216,7 +216,7 @@ describe('Auth Middleware', () => {
         now - 70000, // 70 seconds ago
         now - 30000, // 30 seconds ago
         now - 10000, // 10 seconds ago
-        now         // now
+        now,         // now
       ];
 
       const recentRequests = requests.filter(time => now - time < windowMs);
@@ -262,7 +262,7 @@ describe('Auth Middleware', () => {
         { status: 401, message: 'Token required' },
         { status: 401, message: 'Invalid token' },
         { status: 401, message: 'Token expired' },
-        { status: 403, message: 'User not verified' }
+        { status: 403, message: 'User not verified' },
       ];
 
       errorResponses.forEach(response => {
@@ -277,13 +277,13 @@ describe('Auth Middleware', () => {
         'Unauthorized',
         'Token required',
         'Invalid token',
-        'Access denied'
+        'Access denied',
       ];
 
       const unsafeMessages = [
         'JWT secret key is invalid',
         'Database connection failed',
-        'User password: hashedValue'
+        'User password: hashedValue',
       ];
 
       safeErrorMessages.forEach(message => {
@@ -304,7 +304,7 @@ describe('Auth Middleware', () => {
       const now = Math.floor(Date.now() / 1000);
       const tokenPayload = {
         id: 'user-id',
-        exp: now + 300 // Expires in 5 minutes
+        exp: now + 300, // Expires in 5 minutes
       };
 
       const timeUntilExpiry = tokenPayload.exp - now;

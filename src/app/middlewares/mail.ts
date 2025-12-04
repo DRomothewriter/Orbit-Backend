@@ -44,10 +44,10 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Email enviado exitosamente a: ${options.to}`);
+    // Email sent successfully
     return true;
-  } catch (error) {
-    console.error('❌ Error enviando email:', error);
+  } catch (_error) {
+    // Error sending email
     return false;
   }
 };
@@ -57,10 +57,10 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
   const { userName, userEmail, token, code, type } = data;
 
   switch (type) {
-    case 'verification':
-      return {
-        subject: 'Verifica tu cuenta en Orbit',
-        html: `
+  case 'verification':
+    return {
+      subject: 'Verifica tu cuenta en Orbit',
+      html: `
           <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
             <h1 style="color: #333; text-align: center;">¡Bienvenido a Orbit! 🚀</h1>
             <p style="font-size: 16px; color: #666;">Hola <strong>${userName}</strong>,</p>
@@ -78,13 +78,13 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               Si no creaste esta cuenta, puedes ignorar este correo.
             </p>
           </div>
-        `
-      };
+        `,
+    };
 
-    case 'reset_password':
-      return {
-        subject: 'Recuperar contraseña - Orbit',
-        html: `
+  case 'reset_password':
+    return {
+      subject: 'Recuperar contraseña - Orbit',
+      html: `
           <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
             <h1 style="color: #333; text-align: center;">Recuperar Contraseña 🔐</h1>
             <p style="font-size: 16px; color: #666;">Hola <strong>${userName}</strong>,</p>
@@ -105,13 +105,13 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               Este enlace expirará en 1 hora por seguridad.
             </p>
           </div>
-        `
-      };
+        `,
+    };
 
-    case 'welcome':
-      return {
-        subject: '¡Bienvenido a Orbit!',
-        html: `
+  case 'welcome':
+    return {
+      subject: '¡Bienvenido a Orbit!',
+      html: `
           <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
             <h1 style="color: #333; text-align: center;">¡Cuenta Verificada! 🎉</h1>
             <p style="font-size: 16px; color: #666;">Hola <strong>${userName}</strong>,</p>
@@ -134,11 +134,11 @@ const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string 
               ¡Gracias por unirte a nuestra comunidad!
             </p>
           </div>
-        `
-      };
+        `,
+    };
 
-    default:
-      throw new Error(`Tipo de email no soportado: ${type}`);
+  default:
+    throw new Error(`Tipo de email no soportado: ${type}`);
   }
 };
 
@@ -152,8 +152,8 @@ export const sendAuthEmail = async (data: AuthEmailData): Promise<boolean> => {
       subject: template.subject,
       html: template.html,
     });
-  } catch (error) {
-    console.error('❌ Error enviando email de autenticación:', error);
+  } catch (_error) {
+    // Error sending authentication email
     return false;
   }
 };

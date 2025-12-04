@@ -61,32 +61,32 @@ router.post('/login', login);
 router.post('/signup', signup);
 
 router.post('/google', async (req, res) => {
-	const { idToken } = req.body;
-	try {
-		const ticket = await client.verifyIdToken({
-			idToken,
-			audience: process.env.GOOGLE_CLIENT_ID,
-		});
-		const payload = ticket.getPayload();
+  const { idToken } = req.body;
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
 
-		let user = await User.findOne({ email: payload?.email });
-		if (!user) {
-			user = await User.create({
-				email: payload?.email,
-				username: payload?.name,
-				profileImgUrl: payload?.picture
-			});
-		}
+    let user = await User.findOne({ email: payload?.email });
+    if (!user) {
+      user = await User.create({
+        email: payload?.email,
+        username: payload?.name,
+        profileImgUrl: payload?.picture,
+      });
+    }
 
-		const token = jwt.sign(
-			{ id: user._id, email: user.email },
-			process.env.JWT_SECRET,
-			{ expiresIn: '1d' }
-		);
-		return res.status(Status.SUCCESS).json({token, user});
-	} catch (err) {
-		return res.status(Status.UNAUTHORIZED).json({ error: 'Token de Google inválido' });
-	}
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' },
+    );
+    return res.status(Status.SUCCESS).json({token, user});
+  } catch (_err) {
+    return res.status(Status.UNAUTHORIZED).json({ error: 'Token de Google inválido' });
+  }
 });
 
 /**
