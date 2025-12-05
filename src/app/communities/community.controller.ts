@@ -11,7 +11,7 @@ export const getMyCommunities = async (req: Request, res: Response) => {
     const myCommunitys = await Community.find({ _id: { $in: communityIds } });
     return res.status(Status.SUCCESS).json(myCommunitys);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 export const getCommunityMembers = async (req: Request, res: Response) => {
@@ -30,7 +30,7 @@ export const getCommunityById = async (req: Request, res: Response) => {
     const community = await Community.findById(communityId);
     return res.status(Status.SUCCESS).json({ community: community });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -61,7 +61,7 @@ export const createCommunity = async (req: Request, res: Response) => {
     }
     return res.status(Status.CREATED).json(newCommunity);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json(e);
+    return res.status(Status.INTERNAL_ERROR).json(_e);
   }
 };
 
@@ -76,7 +76,7 @@ export const addCommunityMembers = async (req: Request, res: Response) => {
     });
     return res.status(Status.CREATED).json(communityMembers);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -93,7 +93,7 @@ export const changeCommunityInfo = async (req: Request, res: Response) => {
       .status(Status.SUCCESS)
       .json({ changedCommunity: changedCommunity });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -109,7 +109,7 @@ export const deleteCommunity = async (req: Request, res: Response) => {
       deletedCommunityMembers: deletedCommunityMembers,
     });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -123,6 +123,6 @@ export const deleteCommunityMember = async (req: Request, res: Response) => {
       .status(Status.SUCCESS)
       .json({ deletedCommunityMember: deletedCommunityMember });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };

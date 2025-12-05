@@ -28,7 +28,7 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 		*/
     return res.status(Status.SUCCESS).json(groupMessages);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -40,7 +40,7 @@ export const getMessageById = async (req: Request, res: Response) => {
       return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
     return res.status(Status.SUCCESS).json({ message: message });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -64,7 +64,7 @@ export const createMessage = async (req: Request, res: Response) => {
       .status(Status.CREATED)
       .json({ newMessage: newMessage, messageId: messageId });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' +  e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -102,7 +102,7 @@ export const createImageMessage = async (req: Request, res: Response) => {
       .status(Status.CREATED)
       .json({ newMessage: newMessage, messageId: messageId });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error: ' + e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error: ' + _e });
   }
 };
 
@@ -126,7 +126,7 @@ export const createReaction = async (req: Request, res: Response) => {
       .status(Status.SUCCESS)
       .json({ newReaction: newReaction, updatedMessage: updatedMessage });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -144,7 +144,7 @@ export const updateMessage = async (req: Request, res: Response) => {
       return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
     return res.status(Status.SUCCESS).json({ updatedMessage: updatedMessage });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -156,7 +156,7 @@ export const deleteMessage = async (req: Request, res: Response) => {
       return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
     return res.status(Status.SUCCESS).json({ deletedMessage: deletedMessage });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 

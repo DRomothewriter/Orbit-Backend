@@ -17,7 +17,7 @@ export const createNotification = async (req: Request, res: Response) => {
   } catch (_e) {
     return res
       .status(Status.INTERNAL_ERROR)
-      .json({ error: 'Server error' + e });
+      .json({ error: 'Server error' + _e });
   }
 };
 
@@ -38,7 +38,7 @@ export const getUnseen = async (req: Request, res: Response) => {
   } catch (_e) {
     return res
       .status(Status.INTERNAL_ERROR)
-      .json({ error: 'Server error' + e });
+      .json({ error: 'Server error' + _e });
   }
 };
 
@@ -53,7 +53,7 @@ export const getAllMyNotifications = async (req: Request, res: Response) => {
   } catch (_e) {
     return res
       .status(Status.INTERNAL_ERROR)
-      .json({ error: 'Server error' + e });
+      .json({ error: 'Server error' + _e });
   }
 };
 
@@ -81,7 +81,7 @@ export const updateToSeen = async (req: Request, res: Response) => {
   } catch (_e) {
     return res
       .status(Status.INTERNAL_ERROR)
-      .json({ error: 'Server error' + e });
+      .json({ error: 'Server error' + _e });
   }
 };
 
@@ -92,6 +92,6 @@ export const deleteNotification = async (req: Request, res: Response) => {
     if(!deletedNotification) return res.status(Status.NOT_FOUND).json({error: 'Notification not found'});
     return res.status(Status.SUCCESS).json({deletedNotification: deletedNotification});
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error' + e});
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error' + _e});
   }
 };

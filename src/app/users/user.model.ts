@@ -1,40 +1,40 @@
-import { model, Schema, SchemaTypes} from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const userSchema = new Schema({
   username: {
-    type: SchemaTypes.String,
+    type: String,
     required: true,
   },
   email: {
-    type: SchemaTypes.String,
+    type: String,
     required: true,
     unique: true,
   },
   password: {
-    type: SchemaTypes.String,
+    type: String,
   },
   profileImgUrl: {
-    type: SchemaTypes.String,
+    type: String,
   },
   status:{
-    type: SchemaTypes.String,
+    type: String,
     enum: ['online', 'working', 'offline'],
     default: 'offline',
   },
   // Campos para verificación de email
   isVerified: {
-    type: SchemaTypes.Boolean,
+    type: Boolean,
     default: false,
   },
   verificationCode: {
-    type: SchemaTypes.String,
+    type: String,
   },
   // Campos para recuperación de contraseña
   resetPasswordToken: {
-    type: SchemaTypes.String,
+    type: String,
   },
   resetPasswordExpiry: {
-    type: SchemaTypes.Date,
+    type: Date,
   },
 },{timestamps: true});
 

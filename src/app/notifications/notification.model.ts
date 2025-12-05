@@ -1,4 +1,4 @@
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 export enum NotificationType {
 	MESSAGE = 'message',
 	FRIEND_REQUEST = 'friend_request',
@@ -11,7 +11,7 @@ export enum NotificationType {
 const notificationSchema = new Schema(
   {
     receiverId: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
     },
@@ -28,11 +28,11 @@ const notificationSchema = new Schema(
       required: true,
     },
     data: {
-      type: SchemaTypes.Mixed, // Puede ser cualquier objeto con detalles específicos
+      type: Object, // Puede ser cualquier objeto con detalles específicos
       required: true,
     },
     seen: {
-      type: SchemaTypes.Boolean,
+      type: Boolean,
       default: false,
     },
   },

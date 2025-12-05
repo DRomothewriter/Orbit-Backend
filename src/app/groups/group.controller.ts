@@ -15,7 +15,7 @@ export const getAllMyGroups = async (req: Request, res: Response) => {
 
     return res.status(Status.SUCCESS).json(myGroups);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -33,7 +33,7 @@ export const getMyGroups = async (req: Request, res: Response) => {
 
     return res.status(Status.SUCCESS).json(myGroups);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -51,7 +51,7 @@ export const getMyCommunityGroups = async (req: Request, res: Response) => {
 
     return res.status(Status.SUCCESS).json(myCommunityGroups);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -63,7 +63,7 @@ export const getGroupById = async (req: Request, res: Response) => {
       return res.status(Status.NOT_FOUND).json({ message: 'Group not found' });
     return res.status(Status.SUCCESS).json(group);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -78,7 +78,7 @@ export const getMyGroupMember = async (req: Request, res: Response) => {
         .json({ error: 'groupMember not found' });
     return res.status(Status.SUCCESS).json(myGroupMember);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -94,7 +94,7 @@ export const getGroupMembers = async (req: Request, res: Response) => {
         .json({ message: 'No group members found' });
     return res.status(Status.SUCCESS).json(groupMembers);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -126,7 +126,7 @@ export const createGroup = async (req: Request, res: Response) => {
 
     return res.status(Status.CREATED).json({ newGroup: newGroup });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -143,7 +143,7 @@ export const addMembers = async (req: Request, res: Response) => {
     //hacer join del nuevo usuario a la sala del grupo. Tal vez enviar un evento.
     return res.status(Status.CREATED).json(members);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -157,7 +157,7 @@ export const changeGroupInfo = async (req: Request, res: Response) => {
     );
     return res.status(Status.SUCCESS).json({ changedGroup: changedGroup });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -174,7 +174,7 @@ export const editTopic = async (req: Request, res: Response) => {
       return res.status(Status.NOT_FOUND).json({ message: 'Group not found' });
     return res.status(Status.SUCCESS).json(newGroup.topic);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -197,7 +197,7 @@ export const editGroupImg = async (req: Request, res: Response) => {
     }
     return res.status(Status.SUCCESS).json(file.location);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -215,7 +215,7 @@ export const makeGroupAdmin = async (req: Request, res: Response) => {
         .json({ message: 'Group Member not found' });
     return res.status(Status.SUCCESS).json(newAdmin);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -240,7 +240,7 @@ export const deleteGroupMember = async (req: Request, res: Response) => {
     //Mandar notificación
     return res.status(Status.SUCCESS).json({ deletedMember: deletedMember });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
@@ -254,6 +254,6 @@ export const leaveGroup = async (req: Request, res: Response) => {
     });
     return res.status(Status.SUCCESS).json(deletedMember);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };

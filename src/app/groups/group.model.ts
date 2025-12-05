@@ -1,27 +1,27 @@
-import { model, Schema, SchemaTypes} from 'mongoose';
+import { model, Schema} from 'mongoose';
 
 const groupSchema = new Schema(
   {
     communityId:{
-      type: SchemaTypes.ObjectId,
+      type: String,
     },
     topic: {
-      type: SchemaTypes.String,
+      type: String,
       require: true,
     },
     description: {
-      type: SchemaTypes.String,
+      type: String,
     },
     lastMessage: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       ref: 'Message', //Message
     },
     listIds: [{
-      type: SchemaTypes.ObjectId,
+      type: String,
       ref:'List', //[List]
     }],
     groupImgUrl: {
-      type: SchemaTypes.String,
+      type: String,
     },
   },
   { timestamps: true },

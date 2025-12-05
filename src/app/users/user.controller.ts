@@ -5,6 +5,7 @@ import Status from '../interfaces/Status';
 import { notifyUser } from '../notifications/notification.service';
 import { NotificationType } from '../notifications/notification.model';
 import { deleteImageFromS3 } from '../middlewares/s3';
+import mongoose from 'mongoose';
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -107,7 +108,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
     await friendship.save();
 
     //notification
-    notifyUser(friendId, NotificationType.FRIEND_REQUEST, friendship, io);
+    notifyUser(new mongoose.Types.ObjectId(friendId), NotificationType.FRIEND_REQUEST, friendship, io);
 
     return res.status(Status.CREATED).json({ friendship });
   } catch (_e) {
@@ -135,7 +136,7 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     });
     await reverseFriendship.save();
     notifyUser(
-      friendship.userId,
+      new mongoose.Types.ObjectId(friendship.userId),
       NotificationType.FRIEND_REQUEST_ACCEPTED,
       friendship,
       io,
@@ -181,7 +182,7 @@ export const getReceivedRequests = async (req: Request, res: Response) => {
   } catch (_e) {
     return res
       .status(Status.INTERNAL_ERROR)
-      .json({ error: `Server error: ${e}` });
+      .json({ error: `Server error: ${_e}` });
   }
 };
 
@@ -270,6 +271,6 @@ export const editProfileImg = async (req: Request, res: Response) => {
     }
     return res.status(Status.SUCCESS).json(file.location);
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };

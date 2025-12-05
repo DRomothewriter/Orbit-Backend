@@ -1,19 +1,19 @@
 
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const communityMemberSchema = new Schema({
   userId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'User',
     required: true,
   },
   communityId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'Community',
     required: true,
   },
   role: {
-    type: SchemaTypes.String,
+    type: String,
     enum: ['admin', 'member'],
     required: true,
   },

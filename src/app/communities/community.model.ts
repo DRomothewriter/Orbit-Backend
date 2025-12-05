@@ -1,16 +1,16 @@
 
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const communitySchema = new Schema({
   communityName: {
-    type: SchemaTypes.String,
+    type: String,
     required: true,
   },
   description: {
-    type: SchemaTypes.String,
+    type: String,
   },
   communityImgUrl: {
-    type: SchemaTypes.String,
+    type: String,
   },
 });
 

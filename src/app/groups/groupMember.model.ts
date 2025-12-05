@@ -1,4 +1,4 @@
-import { model, Schema, SchemaTypes, Types} from 'mongoose';
+import { model, Schema, Types} from 'mongoose';
 
 export interface IGroupMember {
 	userId: Types.ObjectId;
@@ -9,16 +9,16 @@ export interface IGroupMember {
 const groupMemberSchema = new Schema(
   {
     userId: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       required: true,
       ref: 'User',
     },
     groupId: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       required: true,
     },
     role: {
-      type: SchemaTypes.String,
+      type: String,
       enum: ['admin', 'member'],
       required: true,
       default: 'member',

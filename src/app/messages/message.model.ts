@@ -1,8 +1,8 @@
-import { model, SchemaTypes, Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 const messageSchema = new Schema(
   {
     type: {
-      type: SchemaTypes.String,
+      type: String,
       enum: ['text', 'image', 'voice', 'video', 'emoji', 'multimedia'],
       required: true,
     },
@@ -19,19 +19,19 @@ const messageSchema = new Schema(
       },
     },
     groupId: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       required: true,
     },
     userId: {
-      type: SchemaTypes.ObjectId,
+      type: String,
       required: true,
     },
     username:{
-      type: SchemaTypes.String,
+      type: String,
       required: true,
     },
     reactionCount: {
-      type: SchemaTypes.Number,
+      type: Number,
     },
   },
   { timestamps: true },

@@ -1,17 +1,17 @@
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const reactionSchema = new Schema({
   messageId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'Message',
   },
 
   emojiCode: {
-    type: SchemaTypes.String,
+    type: String,
     required: true,
   },
   userId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'User',
     required: true,
   },

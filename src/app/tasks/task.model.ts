@@ -1,29 +1,29 @@
 
-import {model, Schema, SchemaTypes} from 'mongoose';
+import {model, Schema} from 'mongoose';
 
 const taskSchema = new Schema({
   listId:{
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'List',
     required: true,
   },
   taskId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     required: true,
   },
   taskTitle:{
-    type: SchemaTypes.String,
+    type: String,
     required: true,
   },
   responsable:[{
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'User',
   }],
   duedate:{
-    type: SchemaTypes.Date,
+    type: Date,
   },
   index: {
-    type: SchemaTypes.Number,
+    type: Number,
   },
 });
 

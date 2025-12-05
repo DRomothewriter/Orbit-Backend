@@ -84,7 +84,8 @@ describe('Group Controller', () => {
 
       expect(mockGroupMemberFind).toHaveBeenCalledWith({ userId: 'user-id-123' });
       expect(mockGroupFind).toHaveBeenCalledWith({ 
-        _id: { $in: ['group-1', 'group-2'] }, 
+        _id: { $in: ['group-1', 'group-2'] },
+        communityId: { $exists: false },
       });
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(mockUserGroups);
@@ -108,7 +109,7 @@ describe('Group Controller', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: 'Server error',
-        e: expect.any(Error),
+        _e: expect.any(Error),
       });
     });
   });
@@ -125,7 +126,7 @@ describe('Group Controller', () => {
 
       expect(mockGroupFindById).toHaveBeenCalledWith('group-id-123');
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({ group: mockGroup });
+      expect(mockRes.json).toHaveBeenCalledWith(mockGroup);
     });
 
     it('should handle non-existent group', async () => {
@@ -133,8 +134,8 @@ describe('Group Controller', () => {
 
       await getGroupById(mockReq, mockRes);
 
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({ group: null });
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Group not found' });
     });
 
     it('should handle invalid group id', async () => {

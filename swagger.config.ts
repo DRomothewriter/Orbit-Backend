@@ -1,16 +1,17 @@
 import { SwaggerOptions } from 'swagger-ui-express';
 
-const port = process.env.PORT || 3000;
-
 const options: SwaggerOptions = {
 	swaggerDefinition: {
 		openapi: '3.1.0',
 		info: {
-			title: 'API Dummy',
-			description: 'API para fines educativos',
-			version: '0.0.1',
+			title: 'Orbit API',
+			description: 'API para la aplicación Orbit',
+			version: '1.0.0',
 		},
-		servers: [{ url: 'http://localhost:' + port }],
+		servers: [
+			{ url: 'http://localhost:3001' },
+			{ url: 'http://localhost:3000' }
+		],
 		components: {
 			securitySchemes: {
 				bearerAuth: {

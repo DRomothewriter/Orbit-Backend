@@ -1,13 +1,13 @@
 
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const listSchema = new Schema({
   title: {
-    type: SchemaTypes.String,
+    type: String,
     required: true,
   },
   description: {
-    type: SchemaTypes.String,
+    type: String,
   },
 });
 const Lists = model('Lists', listSchema);

@@ -1,19 +1,19 @@
 
-import { model, Schema, SchemaTypes } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 const friendshipSchema = new Schema({
   userId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'User',
     required: true,
   },
   friendId: {
-    type: SchemaTypes.ObjectId,
+    type: String,
     ref: 'User',
     required: true,
   },
   status: {
-    type: SchemaTypes.String,
+    type: String,
     enum: ['pending', 'accepted', 'blocked', 'muted'],
     required: true,
   },

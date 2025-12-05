@@ -1,7 +1,7 @@
 import User from '../users/user.model';
 import Status from '../interfaces/Status';
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendAuthEmail, generateVerificationCode, generateResetToken } from '../middlewares/mail';
 
@@ -20,8 +20,8 @@ export const login = async (req: Request, res: Response) => {
     }
     const token = jwt.sign({ id: user._id, email: user.email}, process.env.JWT_SECRET, {expiresIn: '24h'});
     return res.status(Status.SUCCESS).json({ token: token, user: user});
-  }catch(e){
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Database error', e});
+  }catch(_e){
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Database error', _e});
   }
 };
 
@@ -66,8 +66,8 @@ export const signup = async (req: Request, res: Response) => {
       },
       emailSent,
     });
-  }catch(e){
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', e});
+  }catch(_e){
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
   }
 };
 
@@ -102,7 +102,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       },
     });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', e});
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
   }
 };
 
@@ -139,7 +139,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       emailSent,
     });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', e});
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
   }
 };
 
@@ -166,7 +166,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       message: 'Contraseña actualizada exitosamente', 
     });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', e});
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
   }
 };
 
@@ -235,7 +235,7 @@ export const resendVerificationCode = async (req: Request, res: Response) => {
       emailSent,
     });
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', e});
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
   }
 };
 

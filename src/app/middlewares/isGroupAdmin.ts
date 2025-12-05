@@ -33,7 +33,7 @@ export const isGroupAdmin = async (
     }
     return next();
   } catch (_e) {
-    return res.status(Status.INTERNAL_ERROR).json({ error: e });
+    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });
   }
 };
 
