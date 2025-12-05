@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -159,11 +159,12 @@
 <a name='L94'></a><a href='#L94'>94</a>
 <a name='L95'></a><a href='#L95'>95</a>
 <a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -187,7 +188,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -207,7 +208,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -233,7 +234,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -253,13 +254,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// filepath: [task.routes.ts](http://_vscodecontentref_/0)
-<span class="cstat-no" title="statement not covered" >import { Router } from "express";</span>
-<span class="cstat-no" title="statement not covered" >import * as taskController from "./task.controller"</span>
-<span class="cstat-no" title="statement not covered" >import { authMiddleware } from "../middlewares/auth";</span>
-const router = <span class="cstat-no" title="statement not covered" >Router();</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// filepath: [task.routes.ts](http://_vscodecontentref_/0)
+import { Router } from 'express';
+import * as taskController from './task.controller';
+import { authMiddleware } from '../middlewares/auth';
+const router = Router();
 &nbsp;
 /**
  * @swagger
@@ -283,7 +285,7 @@ const router = <span class="cstat-no" title="statement not covered" >Router();</
  *       400:
  *         description: Error en la solicitud
  */
-<span class="cstat-no" title="statement not covered" >router.post("/", authMiddleware, taskController.createTask);</span>
+router.post('/', authMiddleware, taskController.createTask);
 &nbsp;
 /**
  * @swagger
@@ -303,7 +305,7 @@ const router = <span class="cstat-no" title="statement not covered" >Router();</
  *       404:
  *         description: Tarea no encontrada
  */
-<span class="cstat-no" title="statement not covered" >router.get("/:taskId", authMiddleware, taskController.viewTaskById)</span>
+router.get('/:taskId', authMiddleware, taskController.viewTaskById);
 &nbsp;
 /**
  * @swagger
@@ -329,7 +331,7 @@ const router = <span class="cstat-no" title="statement not covered" >Router();</
  *       400:
  *         description: Error en la solicitud
  */
-<span class="cstat-no" title="statement not covered" >router.put("/modifyTask", authMiddleware, taskController.modifyTask);</span>
+router.put('/modifyTask', authMiddleware, taskController.modifyTask);
 &nbsp;
 /**
  * @swagger
@@ -349,16 +351,17 @@ const router = <span class="cstat-no" title="statement not covered" >Router();</
  *       404:
  *         description: Tarea no encontrada
  */
-<span class="cstat-no" title="statement not covered" >router.delete("/:taskId", authMiddleware, taskController.deleteTask);</span>
+router.delete('/:taskId', authMiddleware, taskController.deleteTask);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export default router;</span></pre></td></tr></table></pre>
+export default router;
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-28T19:55:05.370Z
+                at 2025-12-05T02:17:59.851Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

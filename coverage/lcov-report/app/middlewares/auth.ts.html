@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">42.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>6/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>1/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">42.85% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>6/14</span>
             </div>
         
             
@@ -94,8 +94,8 @@
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -104,6 +104,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -111,20 +119,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction } from "express";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction } from 'express';
 import IUser from './../interfaces/user';
-<span class="cstat-no" title="statement not covered" >import jwt from 'jsonwebtoken';</span>
-<span class="cstat-no" title="statement not covered" >import Status from '../interfaces/Status';</span>
+import jwt from 'jsonwebtoken';
+import Status from '../interfaces/Status';
 &nbsp;
 declare global {
     namespace Express {
@@ -133,31 +133,31 @@ declare global {
         }
     }
 }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >a</span>uthMiddleware(</span>req: Request, res: Response, next: NextFunction) {
-    const authHeader = <span class="cstat-no" title="statement not covered" >req.headers.authorization;</span>
-<span class="cstat-no" title="statement not covered" >    if(!authHeader){</span>
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.UNAUTHORIZED).json({error: "No token"});</span>
-    }
-    const token = <span class="cstat-no" title="statement not covered" >authHeader.split(' ')[1];</span> //tomamos el token
-<span class="cstat-no" title="statement not covered" >    if(!token){</span>
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.UNAUTHORIZED);</span>
-    }
-<span class="cstat-no" title="statement not covered" >    try{</span>
-        const decoded = <span class="cstat-no" title="statement not covered" >jwt.verify(token, process.env.JWT_SECRET as string)as IUser;</span>
-<span class="cstat-no" title="statement not covered" >        req.user = decoded;</span>
-<span class="cstat-no" title="statement not covered" >        return next();</span>
-    }catch(e){
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.UNAUTHORIZED).json({error: 'Error auth'});</span>
-    }
-}</pre></td></tr></table></pre>
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  <span class="missing-if-branch" title="else path not taken" >E</span>if(!authHeader){
+    return res.status(Status.UNAUTHORIZED).json({error: 'No token'});
+  }
+  const token = <span class="cstat-no" title="statement not covered" >authHeader.split(' ')[1];</span> //tomamos el token
+<span class="cstat-no" title="statement not covered" >  if(!token){</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.UNAUTHORIZED);</span>
+  }
+<span class="cstat-no" title="statement not covered" >  try{</span>
+    const decoded = <span class="cstat-no" title="statement not covered" >jwt.verify(token, process.env.JWT_SECRET as string)as IUser;</span>
+<span class="cstat-no" title="statement not covered" >    req.user = decoded;</span>
+<span class="cstat-no" title="statement not covered" >    return next();</span>
+  }catch(_e){
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.UNAUTHORIZED).json({error: 'Error auth'});</span>
+  }
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-28T19:55:05.370Z
+                at 2025-12-05T02:17:59.851Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

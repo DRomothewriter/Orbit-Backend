@@ -2,10 +2,15 @@ import { connect } from 'mongoose';
 
 export const dbConnect = async () => {
   try {
-    await connect(process.env.MONGO_URI);
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/orbit';
+    await connect(mongoUri);
     // MongoDB connection success
   } catch (_err) {
     // Error in DB connection
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    } else {
+      throw _err;
+    }
   }
 };

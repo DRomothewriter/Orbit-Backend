@@ -1,13 +1,14 @@
-import User from '../users/user.model';
 import Status from '../interfaces/Status';
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendAuthEmail, generateVerificationCode, generateResetToken } from '../middlewares/mail';
+import { model } from 'mongoose';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try{
+    const User = model('User');
     const user = await User.findOne({email});
     if(!user) return res.status(Status.UNAUTHORIZED).json({ error: 'Invalid credentials'});
     const isValid = await bcrypt.compare(password, user.password);
@@ -28,6 +29,7 @@ export const login = async (req: Request, res: Response) => {
 export const signup = async (req: Request, res: Response) => {
   const { name, email, password} = req.body;
   try{
+    const User = model('User');
     const exists = await User.findOne({email});
     if(exists) return res.status(Status.CONFLICT).json({error: 'User already exists'});
 
@@ -66,17 +68,19 @@ export const signup = async (req: Request, res: Response) => {
       },
       emailSent,
     });
-  }catch(_e){
-    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', _e});
+  }catch(error){
+    console.error('Signup error:', error);
+    return res.status(Status.INTERNAL_ERROR).json({error: 'Server error', details: error.message});
   }
 };
 
 export const verifyEmail = async (req: Request, res: Response) => {
   const { email, code } = req.body;
-    
+
   try {
+    const User = model('User');
     const user = await User.findOne({ email, verificationCode: code });
-        
+    
     if (!user) {
       return res.status(Status.BAD_REQUEST).json({ error: 'Código de verificación inválido' });
     }
@@ -108,10 +112,11 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
-    
+
   try {
+    const User = model('User');
     const user = await User.findOne({ email });
-        
+    
     if (!user) {
       // Por seguridad, no revelamos si el email existe o no
       return res.status(Status.SUCCESS).json({ 
@@ -147,6 +152,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { token, newPassword } = req.body;
     
   try {
+    const User = model('User');
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpiry: { $gt: Date.now() },
@@ -179,6 +185,7 @@ export const verifyEmailByLink = async (req: Request, res: Response) => {
   }
     
   try {
+    const User = model('User');
     const user = await User.findOne({ email, verificationCode: code });
         
     if (!user) {
@@ -207,6 +214,7 @@ export const resendVerificationCode = async (req: Request, res: Response) => {
   const { email } = req.body;
     
   try {
+    const User = model('User');
     const user = await User.findOne({ email });
         
     if (!user) {

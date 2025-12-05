@@ -1,8 +1,18 @@
 import request from 'supertest';
+import { setupTestEnvironment, teardownTestEnvironment } from '../setup/integration';
 import { createApp } from '../../src/index';
 
+let app: any;
+
 describe('Integration Tests - Simple', () => {
-  const app = createApp();
+  beforeAll(async () => {
+    await setupTestEnvironment();
+    app = createApp();
+  });
+
+  afterAll(async () => {
+    await teardownTestEnvironment();
+  });
 
   describe('Health Check', () => {
     it('should return OK status', async () => {

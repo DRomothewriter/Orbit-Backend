@@ -16,4 +16,10 @@ module.exports = {
   testTimeout: 30000,
   clearMocks: true,
   restoreMocks: true,
+  testEnvironment: "node",
+  globalSetup: undefined,
+  globalTeardown: undefined,
+  setupFiles: [],
+  // Establecer NODE_ENV para tests
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
 };

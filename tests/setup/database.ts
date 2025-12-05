@@ -1,18 +1,20 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { connect, connection } from 'mongoose';
-
-let mongoServer: MongoMemoryServer;
+import { connection, connect } from 'mongoose';
 
 export const connectTestDatabase = async (): Promise<void> => {
-  mongoServer = await MongoMemoryServer.create({
-    instance: {
-      port: 27018, // Different port to avoid conflicts
-      dbName: 'orbit-test',
-    },
-  });
-
-  const mongoUri = mongoServer.getUri();
-  await connect(mongoUri);
+  // Disconnect if already connected to avoid conflicts
+  if (connection.readyState !== 0) {
+    await connection.close();
+  }
+  
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/orbit-test';
+  
+  try {
+    await connect(mongoUri);
+    console.log('✅ Connected to test database');
+  } catch (error) {
+    console.error('❌ Failed to connect to test database:', error);
+    throw error;
+  }
 };
 
 export const clearDatabase = async (): Promise<void> => {
@@ -27,8 +29,6 @@ export const clearDatabase = async (): Promise<void> => {
 export const closeDatabase = async (): Promise<void> => {
   if (connection.readyState !== 0) {
     await connection.close();
-  }
-  if (mongoServer) {
-    await mongoServer.stop();
+    console.log('✅ Disconnected from test database');
   }
 };

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">32.25% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/31</span>
+                <span class='fraction'>10/31</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">22.22% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/27</span>
+                <span class='fraction'>6/27</span>
             </div>
         
             
@@ -108,24 +108,13 @@
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
 <a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -133,9 +122,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -145,7 +136,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -153,59 +144,71 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import Task from "./task.model";</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import Task from './task.model';
 &nbsp;
-import { Response, Request } from "express";
-<span class="cstat-no" title="statement not covered" >import Status from "../interfaces/Status";</span>
+import { Response, Request } from 'express';
+import Status from '../interfaces/Status';
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >createTask = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >a</span>sync(</span>req: Request, res: Response) =&gt; {</span>
-    const { taskTitle, responsable, duedate, index} = <span class="cstat-no" title="statement not covered" >req.body;</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-        const newTask = <span class="cstat-no" title="statement not covered" >new Task({taskTitle, responsable, duedate, index});</span>
-<span class="cstat-no" title="statement not covered" >        await newTask.save()</span>
+export const createTask = <span class="fstat-no" title="function not covered" >async(</span>req: Request, res: Response) =&gt; {
+  const { taskTitle, responsable, duedate, index} = <span class="cstat-no" title="statement not covered" >req.body;</span>
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    const newTask = <span class="cstat-no" title="statement not covered" >new Task({taskTitle, responsable, duedate, index});</span>
+<span class="cstat-no" title="statement not covered" >    await newTask.save();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.CREATED).json({ newTask: newTask});</span>
-    } catch (e) {
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });</span>
-    }
-}
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.CREATED).json({ newTask: newTask});</span>
+  } catch (_e) {
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });</span>
+  }
+};
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >viewTaskById = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >a</span>sync </span>(req:Request, res: Response) =&gt; {</span>
-    const taskId = <span class="cstat-no" title="statement not covered" >req.params.id;</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-        const task = <span class="cstat-no" title="statement not covered" >await Task.findById(taskId);</span>
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.CREATED).json({ Task: task});</span>
-    } catch (e) {
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });</span>
-    }
-}
+export const viewTaskById = <span class="fstat-no" title="function not covered" >async </span>(req:Request, res: Response) =&gt; {
+  const taskId = <span class="cstat-no" title="statement not covered" >req.params.id;</span>
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    const task = <span class="cstat-no" title="statement not covered" >await Task.findById(taskId);</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.CREATED).json({ Task: task});</span>
+  } catch (_e) {
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });</span>
+  }
+};
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >modifyTask = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >a</span>sync(</span>req: Request, res: Response) =&gt; {</span>
-    const {taskId, taskTitle, responsable, duedate, index} = <span class="cstat-no" title="statement not covered" >req.body;</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-        const task = <span class="cstat-no" title="statement not covered" >await Task.findByIdAndUpdate(taskId, {taskTitle, responsable, duedate, index}, {new: true});</span>
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.SUCCESS).json({ updatedTask: task});</span>
-    } catch (e) {
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });</span>
-    }
-}
+export const modifyTask = <span class="fstat-no" title="function not covered" >async(</span>req: Request, res: Response) =&gt; {
+  const {taskId, taskTitle, responsable, duedate, index} = <span class="cstat-no" title="statement not covered" >req.body;</span>
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    const task = <span class="cstat-no" title="statement not covered" >await Task.findByIdAndUpdate(taskId, {taskTitle, responsable, duedate, index}, {new: true});</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.SUCCESS).json({ updatedTask: task});</span>
+  } catch (_e) {
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });</span>
+  }
+};
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >deleteTask = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >a</span>sync(</span>req: Request, res: Response) =&gt;{</span>
-    const taskId = <span class="cstat-no" title="statement not covered" >req.params.id;</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-        const deletedTask = <span class="cstat-no" title="statement not covered" >await Task.findByIdAndDelete(taskId);</span>
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.SUCCESS).json({deletedTask: deletedTask});</span>
-    } catch (e) {
-<span class="cstat-no" title="statement not covered" >        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });</span>
-    }
-}</pre></td></tr></table></pre>
+export const deleteTask = <span class="fstat-no" title="function not covered" >async(</span>req: Request, res: Response) =&gt;{
+  const taskId = <span class="cstat-no" title="statement not covered" >req.params.id;</span>
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    const deletedTask = <span class="cstat-no" title="statement not covered" >await Task.findByIdAndDelete(taskId);</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.SUCCESS).json({deletedTask: deletedTask});</span>
+  } catch (_e) {
+<span class="cstat-no" title="statement not covered" >    return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', _e });</span>
+  }
+};
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-28T19:55:05.370Z
+                at 2025-12-05T02:17:59.851Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

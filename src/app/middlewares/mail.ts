@@ -32,6 +32,12 @@ export interface AuthEmailData {
 
 // Función principal para enviar correos
 export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
+  // En el entorno de testing, simulamos el envío exitoso sin usar SMTP
+  if (process.env.NODE_ENV === 'test') {
+    console.log(`[TEST MODE] Email would be sent to: ${options.to} with subject: ${options.subject}`);
+    return true;
+  }
+
   try {
     const transporter = createTransporter();
     

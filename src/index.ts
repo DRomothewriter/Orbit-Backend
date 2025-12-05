@@ -8,6 +8,19 @@ import { setup, serve } from 'swagger-ui-express';
 import swaggerOptions from '../swagger.config';
 import { dbConnect } from './database';
 
+// Import models to ensure they are registered with mongoose
+import './app/users/user.model';
+import './app/groups/group.model';
+import './app/groups/groupMember.model';
+import './app/communities/community.model';
+import './app/communities/communityMember.model';
+import './app/messages/message.model';
+import './app/messages/reaction.model';
+import './app/tasks/task.model';
+import './app/tasks/list.model';
+import './app/users/friendship.model';
+import './app/notifications/notification.model';
+
 import { Server } from 'socket.io';
 import http, { createServer } from 'http';
 import routes from './app/routes';
@@ -24,9 +37,11 @@ export const createApp = () => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Configurar Swagger ANTES de las rutas
-  const swaggerDocs = swaggerJsDoc(swaggerOptions);
-  app.use('/swagger', serve, setup(swaggerDocs));
+  // Configurar Swagger solo si no estamos en modo test
+  if (process.env.NODE_ENV !== 'test') {
+    const swaggerDocs = swaggerJsDoc(swaggerOptions);
+    app.use('/swagger', serve, setup(swaggerDocs));
+  }
 
   // Health check endpoint específico
   app.get('/health', (req, res) => {
