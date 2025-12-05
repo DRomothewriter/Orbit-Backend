@@ -3,32 +3,31 @@ import Reaction from './reaction.model';
 
 import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
-import { notifyUsers } from '../notifications/notification.service';
+import { notifyUser } from '../notifications/notification.service';
 import { getGroupMembers } from '../groups/group.service';
 import { IGroupMember } from '../groups/groupMember.model';
-
+import { NotificationType } from '../notifications/notification.model';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
 	const page: number = parseInt(req.query.page as string, 10) || 1;
 	const pageSize = 100;
 	try {
+		//Revisar antes que sea miembro del grupo. Con middleware tal vez
 		const groupMessages = await Message.find({ groupId: groupId })
 			.sort({ createdAt: 1 })
 			.skip((page - 1) * pageSize)
-			.limit(pageSize);
-
+			.limit(pageSize)
+			.lean();
+		/*
 		const messagesWithReactions = await Promise.all(
 			groupMessages.map(async (msg) => {
-				const reactions = await Reaction.find({ messageId: msg._id });
-				return { ...msg.toObject(), reactions };
+				const reactions = await Reaction.find({ messageId: msg._id }).lean();
+				return { ...msg, reactions };
 			})
 		);
-
-		return res.status(Status.SUCCESS).json({
-			messages: messagesWithReactions,
-			length: messagesWithReactions.length,
-		});
+		*/
+		return res.status(Status.SUCCESS).json(groupMessages);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}
@@ -56,56 +55,78 @@ export const createMessage = async (req: Request, res: Response) => {
 		const messageId = newMessage._id;
 
 		//socket
-		io.to(`${groupId}`).emit('message', newMessage); 
-		const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(r => r.userId.toString() !== userId.toString());
-		
-		//sin await para que sea más rápido para el usuario. Igual si no se recibe alguna notification no es importante
-		notifyUsers(receivers, messageId, req.app.get('io'));
+		io.to(`${groupId}`).emit('message', newMessage);
+		const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(
+			(r) => r.userId.toString() !== userId.toString()
+		);
 
+		Promise.all(
+			receivers.map(async (receiver) => {
+				await notifyUser(
+					receiver.userId,
+					NotificationType.MESSAGE,
+					newMessage,
+					io
+				);
+			})
+		);
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' +  e });
+		return res
+			.status(Status.INTERNAL_ERROR)
+			.json({ error: 'Server error' + e });
 	}
 };
 
 export const createImageMessage = async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const { groupId, username, text } = req.body;
-    const file = req.file as Express.MulterS3.File;
-    const io = req.app.get('io');
+	const userId = req.user.id;
+	const { groupId, username, text } = req.body;
+	const file = req.file as Express.MulterS3.File;
+	const io = req.app.get('io');
 
-    if (!file) {
-        return res.status(Status.BAD_REQUEST).json({ error: 'No image uploaded' });
-    }
+	if (!file) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'No image uploaded' });
+	}
 
-    try {
-        const newMessage = new Message({ 
-            type: 'image', 
-            text: text || '',
-            imageUrl: file.location, // URL de S3
-            groupId, 
-            userId, 
-            username 
-        });
-        
-        await newMessage.save();
-        const messageId = newMessage._id;
+	try {
+		const newMessage = new Message({
+			type: 'image',
+			text: text || '',
+			imageUrl: file.location, // URL de S3
+			groupId,
+			userId,
+			username,
+		});
 
-        // Socket
-        io.to(`${groupId}`).emit('message', newMessage); 
-        const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(r => r.userId.toString() !== userId.toString());
-        
-        // Notificaciones sin await
-        notifyUsers(receivers, messageId, req.app.get('io'));
+		await newMessage.save();
+		const messageId = newMessage._id;
 
-        return res
-            .status(Status.CREATED)
-            .json({ newMessage: newMessage, messageId: messageId });
-    } catch (e) {
-        return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error: ' + e });
-    }
+		// Socket
+		io.to(`${groupId}`).emit('message', newMessage);
+		const receivers: IGroupMember[] = (await getGroupMembers(groupId)).filter(
+			(r) => r.userId.toString() !== userId.toString()
+		);
+
+		Promise.all(
+			receivers.map(async (receiver) => {
+				await notifyUser(
+					receiver.userId,
+					NotificationType.MESSAGE,
+					newMessage,
+					io
+				);
+			})
+		);
+		return res
+			.status(Status.CREATED)
+			.json({ newMessage: newMessage, messageId: messageId });
+	} catch (e) {
+		return res
+			.status(Status.INTERNAL_ERROR)
+			.json({ error: 'Server error: ' + e });
+	}
 };
 
 export const createReaction = async (req: Request, res: Response) => {

@@ -81,7 +81,7 @@ router.get('/all', authMiddleware, notificationController.getAllMyNotifications)
  *       500:
  *         description: Server error
  */
-router.put('/seen', authMiddleware, notificationController.updateToSeen);
+router.put('/seen', authMiddleware, notificationController.updateToSeen); //Middleware que seas el receiverId
 
 /**
  * @swagger

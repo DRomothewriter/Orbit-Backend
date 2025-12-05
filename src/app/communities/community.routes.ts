@@ -14,7 +14,7 @@ const router = Router();
  *         description: Lista de communitys
  */
 router.get('/my-communities', authMiddleware, communityController.getMyCommunities);
-
+router.get('/community-members/:communityId', authMiddleware, communityController.getCommunityMembers) //Middleware para revisar que sea communityMember
 /**
  * @swagger
  * /communitys/{communityId}:
@@ -30,7 +30,7 @@ router.get('/my-communities', authMiddleware, communityController.getMyCommuniti
  *       200:
  *         description: Información del equipo
  */
-router.get('/:communityId', authMiddleware, communityController.getCommunityById)
+router.get('/:communityId', authMiddleware, communityController.getCommunityById) //Middleware para revisar que sea communityMembere
 
 /**
  * @swagger
@@ -48,7 +48,7 @@ router.get('/:communityId', authMiddleware, communityController.getCommunityById
  *       201:
  *         description: Equipo creado
  */
-router.post('/', authMiddleware, communityController.createCommunity);
+router.post('/', authMiddleware, communityController.createCommunity); //Revisar que sean sus amigos
 
 /**
  * @swagger
@@ -70,7 +70,7 @@ router.post('/', authMiddleware, communityController.createCommunity);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-communityMember', authMiddleware, communityController.addCommunityMember);
+router.post('/add-communityMembers', authMiddleware, communityController.addCommunityMembers); //Revisar que sean sus amigos
 
 /**
  * @swagger
@@ -94,7 +94,7 @@ router.post('/add-communityMember', authMiddleware, communityController.addCommu
  *       200:
  *         description: Equipo actualizado
  */
-router.put('/change-community-info', authMiddleware, communityController.changeCommunityInfo);
+router.put('/change-community-info', authMiddleware, communityController.changeCommunityInfo); //Revisar que sea admin
 
 /**
  * @swagger
@@ -111,7 +111,7 @@ router.put('/change-community-info', authMiddleware, communityController.changeC
  *       200:
  *         description: Equipo eliminado
  */
-router.delete('/:communityId', authMiddleware, communityController.deleteCommunity);
+router.delete('/:communityId', authMiddleware, communityController.deleteCommunity); //Revisar que sea admin
 
 /**
  * @swagger
@@ -133,6 +133,8 @@ router.delete('/:communityId', authMiddleware, communityController.deleteCommuni
  *       200:
  *         description: Miembro eliminado
  */
-router.delete('/:communityId/remove-communityMember/:userId', authMiddleware, communityController.deleteCommunityMember);
+router.delete('/:communityId/remove-communityMember/:userId', authMiddleware, communityController.deleteCommunityMember); //Revisar que sea admin
+
+//leaveCommunity 
 
 export default router;
