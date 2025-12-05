@@ -32,9 +32,7 @@ export const getUnseen = async (req: Request, res: Response) => {
 			return res
 				.status(Status.SUCCESS)
 				.json({ message: "You've seen all your notifications" });
-		return res
-			.status(Status.SUCCESS)
-			.json({ unseenNotifications: myUnseenNotifications });
+		return res.status(Status.SUCCESS).json(myUnseenNotifications);
 	} catch (e) {
 		return res
 			.status(Status.INTERNAL_ERROR)
@@ -57,27 +55,14 @@ export const getAllMyNotifications = async (req: Request, res: Response) => {
 	}
 };
 
-
-
 export const updateToSeen = async (req: Request, res: Response) => {
-	const userId = req.user.id;
-	const notificationId = req.params.id;
+	const { notificationIds } = req.body;
 	try {
-		const notification = await Notification.findById(notificationId);
-		if (!notification)
-			return res
-				.status(Status.NOT_FOUND)
-				.json({ error: 'Notification not found' });
-		if (notification.receiverId.toString() !== userId.toString())
-			return res.status(Status.UNAUTHORIZED).json({ error: 'Not authorized' });
-		const updatedNotification = await Notification.findByIdAndUpdate(
-			notificationId,
-			{ seen: true },
-			{ new: true }
+		const notifications = await Notification.updateMany(
+			{_id: { $in: notificationIds }}
+			,{$set: {seen:true}}
 		);
-		return res
-			.status(Status.SUCCESS)
-			.json({ updatedNotification: updatedNotification });
+		return res.status(Status.SUCCESS).json(notifications);
 	} catch (e) {
 		return res
 			.status(Status.INTERNAL_ERROR)
@@ -88,10 +73,19 @@ export const updateToSeen = async (req: Request, res: Response) => {
 export const deleteNotification = async (req: Request, res: Response) => {
 	const notificationId = req.params.notificationId;
 	try {
-		const deletedNotification = await Notification.findByIdAndDelete(notificationId);
-		if(!deletedNotification) return res.status(Status.NOT_FOUND).json({error: 'Notification not found'});
-		return res.status(Status.SUCCESS).json({deletedNotification: deletedNotification});
+		const deletedNotification = await Notification.findByIdAndDelete(
+			notificationId
+		);
+		if (!deletedNotification)
+			return res
+				.status(Status.NOT_FOUND)
+				.json({ error: 'Notification not found' });
+		return res
+			.status(Status.SUCCESS)
+			.json({ deletedNotification: deletedNotification });
 	} catch (e) {
-		return res.status(Status.INTERNAL_ERROR).json({error: 'Server error' + e});
+		return res
+			.status(Status.INTERNAL_ERROR)
+			.json({ error: 'Server error' + e });
 	}
 };

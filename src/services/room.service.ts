@@ -1,11 +1,12 @@
 import { Router } from 'mediasoup/node/lib/types';
 import { mediasoupService } from './mediasoup.service';
 import { Room, Peer } from '../app/interfaces/call';
-
+import { Socket } from 'socket.io';
+import Group from '../app/groups/group.model';
 class RoomService {
 	private rooms: Map<string, Room> = new Map();
 
-	async getOrCreateRoom(roomId: string): Promise<Room> {
+	async getOrCreateRoom(roomId: string, socket: Socket, group: typeof Group): Promise<Room> {
 		let room = this.rooms.get(roomId);
 
 		if (!room) {

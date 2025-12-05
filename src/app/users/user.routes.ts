@@ -240,7 +240,5 @@ router.put('/mute-friend', authMiddleware, userController.muteFriend);
  *         description: Amistad no encontrada
  */
 router.delete('/delete-friendship', authMiddleware, userController.deleteFriendship);
-//Me falta un middleware para ver si es el owner
-
 
 export default router;

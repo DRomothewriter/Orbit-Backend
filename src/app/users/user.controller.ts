@@ -105,9 +105,9 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 				.json({ error: 'Solicitud ya enviada' });
 		const friendship = new Friendship({ userId, friendId, status: 'pending' });
 		await friendship.save();
-
+		const friendshipWUser = {...friendship, userId: req.user};
 		//notification
-		notifyUser(friendId, NotificationType.FRIEND_REQUEST, friendship, io);
+		notifyUser(friendId, NotificationType.FRIEND_REQUEST, friendshipWUser, io);
 
 		return res.status(Status.CREATED).json({ friendship });
 	} catch (e) {
@@ -127,7 +127,6 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 		);
 		if (!friendship)
 			return res.status(Status.NOT_FOUND).json({ error: 'Request not found' });
-		console.log(friendship);
 
 		const reverseFriendship = new Friendship({
 			userId: userId,
@@ -136,7 +135,6 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 		});
 		await reverseFriendship.save();
 
-		console.log(reverseFriendship);
 		notifyUser(
 			friendship.userId,
 			NotificationType.FRIEND_REQUEST_ACCEPTED,

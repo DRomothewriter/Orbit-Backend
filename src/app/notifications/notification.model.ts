@@ -21,6 +21,7 @@ const notificationSchema = new Schema(
 				NotificationType.MESSAGE,
 				NotificationType.FRIEND_REQUEST,
 				NotificationType.FRIEND_REQUEST_ACCEPTED,
+				NotificationType.ADDED_TO_GROUP,
 				NotificationType.ADDED_TO_COMMUNITY,
 				NotificationType.DELETED_FROM_GROUP,
 				NotificationType.DELETED_FROM_COMMUNITY

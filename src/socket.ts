@@ -7,7 +7,7 @@ import { mediasoupService } from './services/mediasoup.service';
 import { webRtcTransportOptions } from './config/mediasoup.config';
 import { Peer } from './app/interfaces/call';
 
-const connectedSockets = [
+export const connectedSockets = [
 	//username, socketId, userId
 ];
 
@@ -97,11 +97,11 @@ export const setupSocket = (io: Server) => {
 		//WEBRTC VideoLlamadas (signaling server)
 
 		// 1. Unirse a una sala de videollamada
-		socket.on('joinCallRoom', async ({ roomId, peerId }) => {
+		socket.on('joinCallRoom', async ({ roomId, peerId, group }) => {
 			try {
 				console.log(`[Call] ${peerId} uniéndose a sala ${roomId}`);
 
-				const room = await roomService.getOrCreateRoom(roomId);
+				const room = await roomService.getOrCreateRoom(roomId, socket, group);
 
 				const peer: Peer = {
 					id: peerId,
@@ -112,20 +112,21 @@ export const setupSocket = (io: Server) => {
 					consumers: new Map(),
 				};
 
-				roomService.addPeer(roomId, peer);
-				socket.join(`call-${roomId}`); // Prefijo para diferenciar de chat rooms
+			roomService.addPeer(roomId, peer);
+			socket.join(`call-${roomId}`); // Prefijo para diferenciar de chat rooms
 
-				const rtpCapabilities =
-					mediasoupService.getRouterRtpCapabilities(roomId);
+			// Emitir a la sala de chat que la llamada está iniciando
+			socket.to(roomId).emit('call-starting', { group });
 
-				// Obtener información de producers existentes de otros peers
+			const rtpCapabilities =
+				mediasoupService.getRouterRtpCapabilities(roomId);				// Obtener información de producers existentes de otros peers
 				const existingPeers = Array.from(room.peers.values())
 					.filter((p) => p.id !== peerId)
 					.map((p) => ({
 						peerId: p.id,
 						producers: Array.from(p.producers.values()).map((producer) => ({
 							id: producer.id,
-							kind: producer.kind,
+							kind: producer.kind, 
 						})),
 					}));
 

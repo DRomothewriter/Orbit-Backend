@@ -5,6 +5,10 @@ import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
 import Message from '../messages/message.model';
 import { deleteImageFromS3 } from '../middlewares/s3';
+import { notifyUser } from '../notifications/notification.service';
+import { NotificationType } from '../notifications/notification.model';
+import { connectedSockets } from '../../socket';
+
 export const getAllMyGroups = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
@@ -101,9 +105,8 @@ export const getGroupMembers = async (req: Request, res: Response) => {
 export const createGroup = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { initialMembersIds, group } = req.body;
-
+	const io = req.app.get('io');
 	//Tal vez revisar que si el grupo viene con communityId, el user y los initial members sean miembros de la community
-
 	try {
 		const newGroup = new Group(group);
 		await newGroup.save();
@@ -120,11 +123,25 @@ export const createGroup = async (req: Request, res: Response) => {
 				role: 'member',
 			});
 			await newMember.save();
-			//io.to(newMember.userId).emit('newGroup')
-		}
-		//Mandar la notificación a todos los groupMembers (socket). También hacer que se les haga join a la sala
 
-		return res.status(Status.CREATED).json({ newGroup: newGroup });
+			const socketId = connectedSockets[memberId];
+			if (socketId && io.sockets.sockets.get(socketId)) {
+				io.sockets.sockets.get(socketId).join(groupId);
+			}
+		}
+
+		Promise.all(
+			initialMembersIds.map(async (receiverId) => {
+				await notifyUser(
+					receiverId,
+					NotificationType.ADDED_TO_GROUP,
+					newGroup,
+					io
+				);
+			})
+		);
+
+		return res.status(Status.CREATED).json(newGroup);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
 	}
@@ -225,6 +242,7 @@ export const deleteGroup = async (req: Request, res: Response) => {
 		const deletedGroup = await Group.findByIdAndDelete(groupId);
 		const deletedMembers = await GroupMember.deleteMany({ groupId: groupId });
 		await Message.deleteMany({ groupId: groupId });
+		await GroupMember.deleteMany({ groupId: groupId });
 		return res
 			.status(Status.SUCCESS)
 			.json({ deletedGroup: deletedGroup, deletedMembers: deletedMembers });
