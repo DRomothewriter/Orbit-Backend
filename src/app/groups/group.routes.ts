@@ -19,7 +19,7 @@ router.get('/all-my-groups', authMiddleware, groupcontroller.getAllMyGroups);
 router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
 router.get('/my-community-groups/:communityId', authMiddleware, groupcontroller.getMyCommunityGroups);
 router.get('/my-group-member/:groupId', authMiddleware, groupcontroller.getMyGroupMember);
-router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMembers);
+router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMembers); //Middleware para revisar que eres miembro del grupo
 /**
  * @swagger
  * /groups/{groupId}:
@@ -35,7 +35,7 @@ router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMe
  *        200:
  *          description: Información del grupo
  */
-router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);
+router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);//Middleware para revisar que eres miembro del grupo
 
 /**
  * @swagger
@@ -52,7 +52,7 @@ router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);
  *       201:
  *         description: Grupo creado
  */
-router.post('/', authMiddleware, groupcontroller.createGroup);
+router.post('/', authMiddleware, groupcontroller.createGroup); //Middleware para checar si los agregados son amigos
 
 /**
  * @swagger
@@ -74,7 +74,7 @@ router.post('/', authMiddleware, groupcontroller.createGroup);
  *       201:
  *         description: Miembro agregado
  */
-router.post('/add-groupmembers', authMiddleware, isGroupAdmin, groupcontroller.addMembers);
+router.post('/add-groupmembers', authMiddleware, isGroupAdmin, groupcontroller.addMembers); //Middleware para checar si los agregados son amigos
 
 /**
  * @swagger
@@ -141,5 +141,5 @@ router.delete('/:groupId', authMiddleware, isGroupAdmin, groupcontroller.deleteG
  */
 router.delete('/:groupId/remove-member/:groupMemberId', authMiddleware, isGroupAdmin, groupcontroller.deleteGroupMember);
 
-router.delete('/:groupId/leave-group', authMiddleware, groupcontroller.leaveGroup);
+router.delete('/:groupId/leave-group', authMiddleware, groupcontroller.leaveGroup); 
 export default router;

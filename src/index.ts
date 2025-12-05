@@ -12,7 +12,8 @@ import http, { createServer } from 'http';
 import routes from './app/routes';
 import { setupSocket } from './socket';
 import cors from 'cors';
-const port = process.env.PORT || 3000;
+import {mediasoupService} from './services/mediasoup.service';
+
 
 const app = express();
 app.use(
@@ -22,6 +23,8 @@ app.use(
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	})
 );
+
+
 const server: http.Server = createServer(app);
 const io = new Server(server, {
 	cors: {
@@ -45,13 +48,26 @@ app.use('/swagger', serve, setup(swaggerDocs));
 
 setupSocket(io);
 
-dbConnect()
-	.then(() => {
-		server.listen(port, () => {
+const startServer = async () => {
+	try{
+		await mediasoupService.initialize(2);
+
+		const port = process.env.PORT || 3000;
+			server.listen(port, () => {
 			console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
 			console.log(`📚Servidor corriendo en http://localhost:${port}/swagger/`);
 			console.log(`📰 API lista para usar`);
 		});
+	}catch(error){
+		console.error('Error al iniciar el servidor:', error);
+		process.exit(1);
+	}
+}
+
+
+dbConnect()
+	.then(() => {
+		startServer();
 	})
 	.catch(() => {
 		console.log('Failed to connect to the database');
