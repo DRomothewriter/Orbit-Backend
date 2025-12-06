@@ -8,6 +8,8 @@
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "test": "jest",
+    "test:unit": "jest --testPathPatterns=tests/unit --runInBand",
+    "test:integration": "jest --testPathPatterns=tests/integration --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false"
