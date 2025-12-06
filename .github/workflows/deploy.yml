@@ -38,7 +38,7 @@ jobs:
     - name: Deploy to EC2
       run: |
         ssh -o StrictHostKeyChecking=no ec2-user@3.16.111.38 << 'EOF'
-          cd /ruta/de/tu/proyecto
+          cd /var/www/orbit-backend/
           git pull origin main
           npm install
           pm2 restart all
