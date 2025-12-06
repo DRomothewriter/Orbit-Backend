@@ -40,7 +40,7 @@ app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesaria
 
 app.use(routes);
 app.get('', (req, res) => {
-	res.json({ message: 'api works' });
+	res.json({ message: 'api works. Check Workflow' });
 });
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
