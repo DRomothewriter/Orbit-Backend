@@ -39,7 +39,14 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ec2-user@3.16.111.38 << 'EOF'
           cd /var/www/orbit-backend/
+          echo "Pulling latest changes..."
           git pull origin main
+          echo "Installing dependencies..."
           npm install
+          echo "Building TypeScript..."
+          npm run build
+          echo "Restarting PM2..."
           pm2 restart all
+          pm2 list
+          echo "Deploy finished"
         EOF
