@@ -25,7 +25,7 @@ describe('Utility Functions Tests', () => {
     describe('generateToken', () => {
       it('should generate a valid JWT token', () => {
         const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token';
-        mockedJwt.sign.mockReturnValue(mockToken);
+        mockedJwt.sign.mockReturnValue(mockToken as never);
 
         const payload = { userId: 'user-123', email: 'test@example.com' };
         const secret = 'jwt-secret';
@@ -62,7 +62,7 @@ describe('Utility Functions Tests', () => {
     describe('verifyToken', () => {
       it('should verify a valid token', () => {
         const mockDecoded = { userId: 'user-123', email: 'test@example.com', iat: 1640995200, exp: 1641600000 };
-        mockedJwt.verify.mockReturnValue(mockDecoded);
+        mockedJwt.verify.mockReturnValue(mockDecoded as never);
 
         const verifyToken = (token: string, secret: string) => {
           return jwt.verify(token, secret);
@@ -155,7 +155,7 @@ describe('Utility Functions Tests', () => {
     describe('hashPassword', () => {
       it('should hash password with salt rounds', async () => {
         const mockHash = '$2b$10$hashedpasswordexample';
-        mockedBcrypt.hash.mockResolvedValue(mockHash);
+        mockedBcrypt.hash.mockResolvedValue(mockHash as never);
 
         const hashPassword = async (password: string, saltRounds: number = 10) => {
           return bcrypt.hash(password, saltRounds);
@@ -169,7 +169,7 @@ describe('Utility Functions Tests', () => {
       });
 
       it('should handle hashing errors', async () => {
-        mockedBcrypt.hash.mockRejectedValue(new Error('Hashing failed'));
+        mockedBcrypt.hash.mockRejectedValue(new Error('Hashing failed') as never);
 
         const hashPasswordSafe = async (password: string) => {
           try {
@@ -185,7 +185,7 @@ describe('Utility Functions Tests', () => {
 
       it('should handle different salt rounds', async () => {
         const mockHash = '$2b$12$highsecurityhash';
-        mockedBcrypt.hash.mockResolvedValue(mockHash);
+        mockedBcrypt.hash.mockResolvedValue(mockHash as never);
 
         const hashPassword = async (password: string, saltRounds: number) => {
           return bcrypt.hash(password, saltRounds);
@@ -198,7 +198,7 @@ describe('Utility Functions Tests', () => {
 
     describe('comparePassword', () => {
       it('should compare password successfully', async () => {
-        mockedBcrypt.compare.mockResolvedValue(true);
+        mockedBcrypt.compare.mockResolvedValue(true as never);
 
         const comparePassword = async (plaintext: string, hash: string) => {
           return bcrypt.compare(plaintext, hash);
@@ -211,7 +211,7 @@ describe('Utility Functions Tests', () => {
       });
 
       it('should return false for incorrect password', async () => {
-        mockedBcrypt.compare.mockResolvedValue(false);
+        mockedBcrypt.compare.mockResolvedValue(false as never);
 
         const comparePassword = async (plaintext: string, hash: string) => {
           return bcrypt.compare(plaintext, hash);
@@ -222,7 +222,7 @@ describe('Utility Functions Tests', () => {
       });
 
       it('should handle comparison errors', async () => {
-        mockedBcrypt.compare.mockRejectedValue(new Error('Comparison failed'));
+        mockedBcrypt.compare.mockRejectedValue(new Error('Comparison failed') as never);
 
         const comparePasswordSafe = async (plaintext: string, hash: string) => {
           try {

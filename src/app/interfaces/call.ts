@@ -1,10 +1,10 @@
-import { RtcCapabilities, DtlsParameters, IceCandidate, IceParameters } from 'mediasoup/node/lib/types';
+import { RtpCapabilities, DtlsParameters, IceCandidate, IceParameters } from 'mediasoup/node/lib/types';
 
 export interface Peer{
     id: string;
     socketId: string;
     roomId: string;
-    rtpCapabilities?: RtpCapabilites;
+    rtpCapabilities?: RtpCapabilities;
     transports: Map<string, any>;
     producers: Map<string, any>;
     consumers: Map<string, any>;

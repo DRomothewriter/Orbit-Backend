@@ -85,7 +85,7 @@ describe('Auth Controller', () => {
 
     beforeEach(() => {
       mockReq.body = validSignupData;
-      mockBcryptHash.mockResolvedValue('$2b$10$hashedpassword');
+      mockBcryptHash.mockResolvedValue('$2b$10$hashedpassword' as never);
     });
 
     it('should handle signup process (error handling due to mock limitations)', async () => {
