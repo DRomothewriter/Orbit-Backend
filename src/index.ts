@@ -56,7 +56,7 @@ const startServer = async () => {
 			server.listen(port, () => {
 			console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
 			console.log(`📚Servidor corriendo en http://localhost:${port}/swagger/`);
-			console.log(`📰 API lista para usar`);
+			console.log(`📰 API lista para usar. Prueba workflow`);
 		});
 	}catch(error){
 		console.error('Error al iniciar el servidor:', error);
