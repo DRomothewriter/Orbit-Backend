@@ -37,7 +37,7 @@ jobs:
     # 6. Desplegar en EC2
     - name: Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@3.16.111.38 << 'EOF'
+        ssh -o StrictHostKeyChecking=no ec2-user@3.16.37.82 << 'EOF'
           cd /var/www/orbit-backend/
           echo "Pulling latest changes..."
           git pull origin main
