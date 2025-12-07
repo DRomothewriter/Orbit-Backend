@@ -18,7 +18,7 @@ import {mediasoupService} from './services/mediasoup.service';
 const app = express();
 app.use(
 	cors({
-		origin: 'https://orbit.diego-romo-dev.com',
+		origin: process.env.FRONTEND_URL,
 		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	})
@@ -28,7 +28,7 @@ app.use(
 const server: http.Server = createServer(app);
 const io = new Server(server, {
 	cors: {
-		origin: 'https://orbit.diego-romo-dev.com',
+		origin: process.env.FRONTEND_URL,
 		methods: ['GET', 'POST','PUT', 'DELETE'],
 		credentials: true,
 	},
