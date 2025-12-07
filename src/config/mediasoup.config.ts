@@ -20,7 +20,8 @@ export const routerOptions = {
 			mimeType: 'video/VP8',
 			clockRate: 90000,
 			parameters: {
-				'x-google-start-bitrate': 1000,
+				'x-google-start-bitrate': 500, 
+				'x-google-max-bitrate': 800,
 			},
 		},
 	],
@@ -39,6 +40,6 @@ export const webRtcTransportOptions = {
 			announcedAddress: process.env.MEDIASOUP_ANNOUNCED_IP || undefined,
 		},
 	],
-	maxIncomingBitrate: 1500000,
-	initialAvailableOutgoingBitrate: 1000000,
+    maxIncomingBitrate: 800000,                  
+    initialAvailableOutgoingBitrate: 500000,   
 };
