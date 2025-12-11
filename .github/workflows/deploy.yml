@@ -14,7 +14,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2. Configurar Node.js (si tu app es Node)
+    # 2. Configurar Node.js 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
