@@ -20,11 +20,39 @@ Orbit es una aplicación backend desarrollada en TypeScript que implementa un si
 	```bash
 	npm install
 	```
-3. Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+3. Crea un archivo `.env` en la raíz del proyecto basándote en `.env.template`:
 	```env
-	PORT=3001
-	MONGO_URI=tu_mongo_uri
-	JWT_SECRET=tu_palabra_clave
+	PORT=3000
+	MONGO_URI=url_de_base_de_datos_de_mongo
+	JWT_SECRET=tu_palabra_random_para_encriptar
+	
+	# AWS S3 para almacenamiento de archivos
+	S3_ACCESS_KEY=tu_access_key
+	S3_SECRET_KEY=tu_secret_key
+	S3_REGION=tu_region
+	
+	# Google OAuth
+	GOOGLE_ID=tu_google_client_id
+	GOOGLE_CLIENT_ID=tu_google_client_id
+	
+	# URL del frontend (sin / al final)
+	FRONTEND_URL=http://localhost:4200
+	
+	# Email de remitente para correos del sistema
+	FROM_EMAIL=noreply@orbit.com
+	
+	# Configuración SMTP
+	SMTP_HOST=smtp.gmail.com
+	SMTP_PORT=587
+	SMTP_SECURE=false
+	SMTP_USER=tu-correo@gmail.com
+	SMTP_PASS=tu-contraseña-de-aplicacion
+	
+	# Mediasoup (para videollamadas)
+	MEDIASOUP_LISTEN_IP=0.0.0.0
+	MEDIASOUP_ANNOUNCED_IP=127.0.0.1
+	MEDIASOUP_MIN_PORT=10000
+	MEDIASOUP_MAX_PORT=10100
 	```
 4. Inicia el servidor en modo desarrollo:
 	```bash
@@ -32,9 +60,9 @@ Orbit es una aplicación backend desarrollada en TypeScript que implementa un si
 	```
 
 ## Uso
-El servidor se ejecutará por defecto en `http://localhost:3001`. 
+El servidor se ejecutará por defecto en `http://localhost:3000`. 
 
-La documentación de la API está disponible en: `http://localhost:3001/swagger`
+La documentación de la API está disponible en: `http://localhost:3000/swagger`
 
 ## Rutas principales
 
@@ -59,15 +87,13 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 - `DELETE /groups/{groupId}/remove-member/{userId}` - Borrar miembro de grupo
 
 ### Comunidades
-- `GET /teams/my-teams` — Listar equipos del usuario
-- `GET /teams/{teamId}` — Obtener equipo por ID
-- `GET /teams/my-teams` — Listar teams del usuario
-- `GET /teams/{teamId}` — Obtener team por ID
-- `POST /teams` - Crear team
-- `POST /teams/add-teamate` - Añadir miembro al team
-- `PUT /teams/change-team-info` - Actualizar team
-- `DELETE /teams/{teamId}` - Borrar team
-- `DELETE /teams/{teamId}/remove-member/{userId}` - Borrar teamate
+- `GET /communities/my-communities` — Listar comunidades del usuario
+- `GET /communities/{communityId}` — Obtener comunidad por ID
+- `POST /communities` - Crear comunidad
+- `POST /communities/add-member` - Añadir miembro a la comunidad
+- `PUT /communities/change-community-info` - Actualizar comunidad
+- `DELETE /communities/{communityId}` - Borrar comunidad
+- `DELETE /communities/{communityId}/remove-member/{userId}` - Borrar miembro de comunidad
 
 ### Mensajes
 - `GET /messages/{groupId}?page=1` — Listar mensajes de un grupo (paginados, incluye reacciones)
@@ -84,12 +110,23 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 - `PUT /tasks/modifyTask` — Modificar tarea
 - `DELETE /tasks/{taskId}` — Eliminar tarea
 
+### Notificaciones
+- `GET /notifications` — Obtener notificaciones del usuario
+- `PUT /notifications/{notificationId}/read` — Marcar notificación como leída
+- `DELETE /notifications/{notificationId}` — Eliminar notificación
+
 ## Tecnologías utilizadas
 - Node.js
 - TypeScript
 - Express
 - Mongoose (MongoDB)
-- Socket.IO
+- Socket.IO (Mensajería en tiempo real)
+- Mediasoup (Videollamadas WebRTC)
+- Google OAuth (Autenticación)
+- AWS S3 (Almacenamiento de archivos)
+- Nodemailer (Envío de correos)
+- JWT (Autenticación)
+- Bcrypt (Encriptación de contraseñas)
 - Swagger (Documentación de API)
 - Jest (Testing framework)
 - Supertest (HTTP testing)
@@ -127,14 +164,15 @@ npm test user.controller.test.ts
 La suite de tests incluye:
 
 #### Controladores
-- **Auth Controller** (11 tests)
+- **Auth Controller**
   - Registro de usuarios
-  - Inicio de sesión
+  - Inicio de sesión con email/contraseña
+  - Login con Google OAuth
   - Verificación de email
   - Recuperación de contraseña
-  - Manejo de errores
+  - Manejo de errores y validaciones
 
-- **User Controller** (18 tests)
+- **User Controller**
   - Obtener todos los usuarios
   - Buscar usuarios por query
   - Obtener usuario por ID
@@ -143,35 +181,27 @@ La suite de tests incluye:
   - Eliminar usuario
   - Validación de datos
 
-- **Group Controller** (26 tests)
-  - Crear y gestionar grupos
-  - Añadir/eliminar miembros
-  - Actualizar información del grupo
-  - Obtener grupos del usuario
-  - Validaciones y permisos
+#### Middlewares y Utilidades
+- **Auth Middleware**
+  - Verificación de tokens JWT
+  - Manejo de tokens inválidos o expirados
+  - Protección de rutas
 
-- **Team Controller** (25 tests)
-  - Crear y gestionar equipos
-  - Añadir/eliminar miembros del equipo
-  - Actualizar información del equipo
-  - Obtener equipos del usuario
-  - Validaciones y permisos
+- **Mail Utils**
+  - Envío de correos de verificación
+  - Envío de correos de recuperación de contraseña
+  - Manejo de errores SMTP
 
-- **Task Controller** (38 tests)
-  - Crear tareas
-  - Obtener tareas por ID y usuario
-  - Actualizar tareas
-  - Eliminar tareas
-  - Gestión de estados
-  - Validaciones completas
+- **Validation Tests**
+  - Validación de formatos de email
+  - Validación de campos requeridos
+  - Validación de tipos de datos
 
-- **Message Controller** (38 tests)
-  - Crear mensajes
-  - Obtener mensajes por grupo
-  - Actualizar y eliminar mensajes
-  - Sistema de reacciones
-  - Paginación
-  - Validaciones de permisos
+#### Flujos de Integración
+- **Integration Workflows**
+  - Flujo completo de registro y verificación
+  - Flujo de login y autenticación
+  - Flujo de recuperación de contraseña
 
 ### Configuración de Testing
 Los tests utilizan:
@@ -182,45 +212,77 @@ Los tests utilizan:
 - **Setup y teardown** automático de base de datos
 
 ### Estadísticas Actuales
-- **9 suites de tests**
-- **156 tests en total**
-- **100% de tests pasando**
-- Cobertura completa de todos los controladores
+- **8 suites de tests**
+- Auth Controller Tests
+- Auth Middleware Tests
+- User Controller Tests
+- Mail Utils Tests
+- Validation Tests
+- Integration Workflows Tests
+- Utils Tests
+- Cobertura de funcionalidades principales
 
 ## Estructura del proyecto
 
 ```
 src/
   index.ts
+  socket.ts
   app/
-	 users/
-	 groups/
-	 teams/
-	 tasks/
-	 messages/
-	 auth/
+    routes.ts
+    auth/
+    users/
+    groups/
+    communities/
+    messages/
+    tasks/
+    notifications/
+    middlewares/
+    interfaces/
+  config/
+    mediasoup.config.ts
+  database/
+    index.ts
+  services/
+    mediasoup.service.ts
+    room.service.ts
 tests/
   auth.controller.test.ts
+  auth.middleware.test.ts
   user.controller.test.ts
-  group.controller.test.ts
-  team.controller.test.ts
-  task.controller.test.ts
-  message.controller.test.ts
-  setup/
-    database.ts
-    server.ts
+  mail.utils.test.ts
+  validation.test.ts
+  integration.workflows.test.ts
+  utils.test.ts
+  setup.ts
 ```
 
 ## Documentación Swagger
 Puedes consultar y probar los endpoints desde la interfaz Swagger en:
 ```
-http://localhost:3001/swagger
+http://localhost:3000/swagger
 ```
 
 ## Variables de entorno
 
-| Variable    | Descripción                        |
-|------------ |------------------------------------|
-| PORT        | Puerto en el que corre el servidor |
-| MONGO_URI   | URI de conexión a MongoDB          |
-| JWT_SECRET  | Palabra clave para encriptar
+| Variable               | Descripción                                    |
+|------------------------|------------------------------------------------|
+| PORT                   | Puerto en el que corre el servidor (3000)      |
+| MONGO_URI              | URI de conexión a MongoDB                      |
+| JWT_SECRET             | Palabra clave para encriptar tokens JWT        |
+| S3_ACCESS_KEY          | Access key de AWS S3                           |
+| S3_SECRET_KEY          | Secret key de AWS S3                           |
+| S3_REGION              | Región de AWS S3                               |
+| GOOGLE_ID              | Client ID de Google OAuth                      |
+| GOOGLE_CLIENT_ID       | Client ID de Google OAuth                      |
+| FRONTEND_URL           | URL del frontend (sin / al final)              |
+| FROM_EMAIL             | Email remitente para correos del sistema       |
+| SMTP_HOST              | Host del servidor SMTP                         |
+| SMTP_PORT              | Puerto del servidor SMTP                       |
+| SMTP_SECURE            | Usar SSL/TLS (true/false)                      |
+| SMTP_USER              | Usuario para autenticación SMTP                |
+| SMTP_PASS              | Contraseña para autenticación SMTP             |
+| MEDIASOUP_LISTEN_IP    | IP donde Mediasoup escucha (0.0.0.0)           |
+| MEDIASOUP_ANNOUNCED_IP | IP pública anunciada para Mediasoup            |
+| MEDIASOUP_MIN_PORT     | Puerto mínimo para RTP (10000)                 |
+| MEDIASOUP_MAX_PORT     | Puerto máximo para RTP (10100)                 |
