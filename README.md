@@ -58,7 +58,7 @@ La documentación de la API está disponible en: `http://localhost:3001/swagger`
 - `DELETE /groups/{groupId}` - Borrar grupo
 - `DELETE /groups/{groupId}/remove-member/{userId}` - Borrar miembro de grupo
 
-### Equipos
+### Comunidades
 - `GET /teams/my-teams` — Listar equipos del usuario
 - `GET /teams/{teamId}` — Obtener equipo por ID
 - `GET /teams/my-teams` — Listar teams del usuario
