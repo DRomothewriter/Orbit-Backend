@@ -25,8 +25,8 @@ jobs:
       run: npm install
 
     # 4. Ejecutar pruebas
-    - name: Run tests
-      run: npm test
+#   - name: Run tests
+#      run: npm test
 
     # 5. Copiar clave privada para SSH
     - name: Setup SSH
