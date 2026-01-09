@@ -39,11 +39,12 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const searchUsers = async (req: Request, res: Response) => {
 	const username = req.query.username as string;
+	const userId = req.user.id;
 	try {
 		const users = await User.find({
 			username: { $regex: username, $options: 'i' },
-		}).select('_id username email');
-		//falta validación que no regrese el user propio
+			_id: { $ne: userId}
+		}).select('_id username email profileImgUrl');
 		return res.status(Status.SUCCESS).json(users);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error' });
@@ -173,7 +174,7 @@ export const getReceivedRequests = async (req: Request, res: Response) => {
 		const friendRequests = await Friendship.find({
 			friendId: userId,
 			status: 'pending',
-		});
+		}).populate('userId');
 		if (!friendRequests)
 			return res
 				.status(Status.NO_CONTENT)

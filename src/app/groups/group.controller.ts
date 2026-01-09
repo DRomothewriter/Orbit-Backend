@@ -124,9 +124,9 @@ export const createGroup = async (req: Request, res: Response) => {
 			});
 			await newMember.save();
 
-			const socketId = connectedSockets[memberId];
-			if (socketId && io.sockets.sockets.get(socketId)) {
-				io.sockets.sockets.get(socketId).join(groupId);
+			const connectedSocket: any = connectedSockets.find(cS => cS.userId.toString() === userId.toString());
+			if (connectedSocket.socketId && io.sockets.sockets.get(connectedSocket.socketId)) {
+				io.sockets.sockets.get(connectedSocket.socketId).join(groupId);
 			}
 		}
 
