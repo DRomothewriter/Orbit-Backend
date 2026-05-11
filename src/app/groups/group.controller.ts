@@ -108,12 +108,41 @@ export const createGroup = async (req: Request, res: Response) => {
 	const io = req.app.get('io');
 	//Tal vez revisar que si el grupo viene con communityId, el user y los initial members sean miembros de la community
 	try {
+		const isDirectChat = !group?.communityId && Array.isArray(initialMembersIds) && initialMembersIds.length === 1;
+		if (isDirectChat) {
+			const friendId = initialMembersIds[0];
+			const existingMembers = await GroupMember.find({
+				userId: { $in: [userId, friendId] },
+			});
+			const candidateGroupIds = existingMembers.map((member) => member.groupId.toString());
+			const existingDirectChat = await Group.findOne({
+				_id: { $in: candidateGroupIds },
+				communityId: { $exists: false },
+			});
+
+			if (existingDirectChat) {
+				const memberCount = await GroupMember.countDocuments({
+					groupId: existingDirectChat._id,
+				});
+				if (memberCount === 2) {
+					return res.status(Status.SUCCESS).json(existingDirectChat);
+				}
+			}
+		}
+
 		const newGroup = new Group(group);
 		await newGroup.save();
 
 		const groupId = newGroup._id.toString();
 		const newMember = new GroupMember({ userId, groupId, role: 'admin' });
 		await newMember.save();
+
+		const creatorSocket: any = connectedSockets.find(
+			(cS) => cS.userId?.toString() === userId.toString()
+		);
+		if (creatorSocket?.socketId && io.sockets.sockets.get(creatorSocket.socketId)) {
+			io.sockets.sockets.get(creatorSocket.socketId).join(groupId);
+		}
 
 		// Agregar los miembros iniciales
 		for (const memberId of initialMembersIds) {
@@ -124,8 +153,13 @@ export const createGroup = async (req: Request, res: Response) => {
 			});
 			await newMember.save();
 
-			const connectedSocket: any = connectedSockets.find(cS => cS.userId.toString() === userId.toString());
-			if (connectedSocket.socketId && io.sockets.sockets.get(connectedSocket.socketId)) {
+			const connectedSocket: any = connectedSockets.find(
+				(cS) => cS.userId?.toString() === memberId.toString()
+			);
+			if (
+				connectedSocket?.socketId &&
+				io.sockets.sockets.get(connectedSocket.socketId)
+			) {
 				io.sockets.sockets.get(connectedSocket.socketId).join(groupId);
 			}
 		}

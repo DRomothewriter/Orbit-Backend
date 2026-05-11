@@ -47,7 +47,8 @@ export const getMessageById = async (req: Request, res: Response) => {
 
 export const createMessage = async (req: Request, res: Response) => {
 	const userId = req.user.id;
-	const { type, text, groupId, username } = req.body.message;
+	const incomingMessage = req.body.message ?? req.body ?? {};
+	const { type, text, groupId, username } = incomingMessage;
 	const io = req.app.get('io');
 	try {
 		const newMessage = new Message({ type, text, groupId, userId, username });
