@@ -106,6 +106,12 @@ export const createGroup = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { initialMembersIds, group } = req.body;
 	const io = req.app.get('io');
+	
+	// Validation: topic is required and not empty
+	if (!group?.topic || group.topic.trim().length === 0) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'Group topic is required' });
+	}
+
 	//Tal vez revisar que si el grupo viene con communityId, el user y los initial members sean miembros de la community
 	try {
 		const isDirectChat = !group?.communityId && Array.isArray(initialMembersIds) && initialMembersIds.length === 1;

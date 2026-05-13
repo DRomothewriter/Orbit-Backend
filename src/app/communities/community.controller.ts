@@ -37,6 +37,12 @@ export const getCommunityById = async (req: Request, res: Response) => {
 export const createCommunity = async (req: Request, res: Response) => {
 	const { initialMembersIds, community } = req.body;
 	const userId = req.user.id;
+	
+	// Validation: communityName is required and not empty
+	if (!community?.communityName || community.communityName.trim().length === 0) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'Community name is required' });
+	}
+
 	try {
 		const newCommunity = new Community(community);
 		await newCommunity.save();
@@ -69,11 +75,11 @@ export const addCommunityMembers = async (req: Request, res: Response) => {
 	const { communityId, userIds } = req.body;
 	try {
 		const communityMembers = [];
-		userIds.foreach(async (userId: string) => {
+		for (const userId of userIds) {
 			const communityMember = new CommunityMember({ communityId, userId });
 			await communityMember.save();
 			communityMembers.push(communityMember);
-		});
+		}
 		return res.status(Status.CREATED).json(communityMembers);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
