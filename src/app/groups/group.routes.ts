@@ -4,6 +4,7 @@ import { authMiddleware } from '../middlewares/auth';
 import * as groupcontroller from './group.controller';
 import { uploadS3 } from '../middlewares/s3';
 import isGroupAdmin from '../middlewares/isGroupAdmin';
+import isGroupMember from '../middlewares/isGroupMember';
 const router = Router();
 
 router.get('/all-my-groups', authMiddleware, groupcontroller.getAllMyGroups);
@@ -18,8 +19,8 @@ router.get('/all-my-groups', authMiddleware, groupcontroller.getAllMyGroups);
  */
 router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
 router.get('/my-community-groups/:communityId', authMiddleware, groupcontroller.getMyCommunityGroups);
-router.get('/my-group-member/:groupId', authMiddleware, groupcontroller.getMyGroupMember);
-router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMembers); //Middleware para revisar que eres miembro del grupo
+router.get('/my-group-member/:groupId', authMiddleware, isGroupMember, groupcontroller.getMyGroupMember);
+router.get('/group-members/:groupId', authMiddleware, isGroupMember, groupcontroller.getGroupMembers); //Middleware para revisar que eres miembro del grupo
 /**
  * @swagger
  * /groups/{groupId}:
@@ -35,7 +36,7 @@ router.get('/group-members/:groupId', authMiddleware, groupcontroller.getGroupMe
  *        200:
  *          description: Información del grupo
  */
-router.get('/:groupId', authMiddleware, groupcontroller.getGroupById);//Middleware para revisar que eres miembro del grupo
+router.get('/:groupId', authMiddleware, isGroupMember, groupcontroller.getGroupById);//Middleware para revisar que eres miembro del grupo
 
 /**
  * @swagger
