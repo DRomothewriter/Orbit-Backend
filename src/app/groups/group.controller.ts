@@ -117,20 +117,34 @@ export const createGroup = async (req: Request, res: Response) => {
 		const isDirectChat = !group?.communityId && Array.isArray(initialMembersIds) && initialMembersIds.length === 1;
 		if (isDirectChat) {
 			const friendId = initialMembersIds[0];
-			const existingMembers = await GroupMember.find({
-				userId: { $in: [userId, friendId] },
-			});
-			const candidateGroupIds = existingMembers.map((member) => member.groupId.toString());
-			const existingDirectChat = await Group.findOne({
-				_id: { $in: candidateGroupIds },
-				communityId: { $exists: false },
-			});
+			const currentUserMemberships = await GroupMember.find({ userId });
+			const friendMemberships = await GroupMember.find({ userId: friendId });
 
-			if (existingDirectChat) {
-				const memberCount = await GroupMember.countDocuments({
-					groupId: existingDirectChat._id,
+			const currentUserGroupIds = new Set(
+				currentUserMemberships.map((member) => member.groupId.toString())
+			);
+			const sharedGroupIds = friendMemberships
+				.map((member) => member.groupId.toString())
+				.filter((groupId) => currentUserGroupIds.has(groupId));
+
+			for (const candidateGroupId of sharedGroupIds) {
+				const existingDirectChat = await Group.findOne({
+					_id: candidateGroupId,
+					communityId: { $exists: false },
 				});
-				if (memberCount === 2) {
+
+				if (!existingDirectChat) {
+					continue;
+				}
+
+				const members = await GroupMember.find({ groupId: candidateGroupId });
+				const memberIds = members.map((member) => member.userId.toString());
+
+				if (
+					members.length === 2 &&
+					memberIds.includes(userId.toString()) &&
+					memberIds.includes(friendId.toString())
+				) {
 					return res.status(Status.SUCCESS).json(existingDirectChat);
 				}
 			}
