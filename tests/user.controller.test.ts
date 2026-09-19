@@ -46,11 +46,11 @@ jest.mock('../src/app/middlewares/s3', () => ({
   deleteImageFromS3: jest.fn()
 }));
 
-import { 
-  getAllUsers, 
-  getMyUser, 
-  getUserById, 
-  searchUsers 
+import {
+  getAllUsers,
+  getMyUser,
+  getUserById,
+  searchUsers
 } from '../src/app/users/user.controller';
 
 describe('User Controller', () => {
@@ -195,7 +195,8 @@ describe('User Controller', () => {
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: 'test', $options: 'i' }
+        username: { $regex: 'test', $options: 'i' },
+        _id: { $ne: 'user-id-123' }
       });
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(searchResults);
@@ -211,7 +212,8 @@ describe('User Controller', () => {
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: 'TEST', $options: 'i' }
+        username: { $regex: 'TEST', $options: 'i' },
+        _id: { $ne: 'user-id-123' }
       });
     });
 
@@ -225,7 +227,8 @@ describe('User Controller', () => {
       await searchUsers(mockReq, mockRes);
 
       expect(mockUserFind).toHaveBeenCalledWith({
-        username: { $regex: '', $options: 'i' }
+        username: { $regex: '', $options: 'i' },
+        _id: { $ne: 'user-id-123' }
       });
     });
 
@@ -236,7 +239,7 @@ describe('User Controller', () => {
 
       await searchUsers(mockReq, mockRes);
 
-      expect(mockUserFind().select).toHaveBeenCalledWith('_id username email');
+      expect(mockUserFind().select).toHaveBeenCalledWith('_id username email profileImgUrl');
     });
 
     it('should handle database errors', async () => {
@@ -297,13 +300,13 @@ describe('User Controller', () => {
         ...mockUser,
         password: '$2b$10$hashedpassword'
       };
-      
+
       mockUserFindById.mockResolvedValue(userWithPassword);
 
       await getUserById(mockReq, mockRes);
 
       // In a real implementation, password should be excluded
-      expect(mockRes.json).toHaveBeenCalledWith({ 
+      expect(mockRes.json).toHaveBeenCalledWith({
         user: expect.any(Object)
       });
     });
@@ -335,7 +338,8 @@ describe('User Controller', () => {
       expect(mockUserFind).toHaveBeenCalledWith({
         username: expect.objectContaining({
           $options: 'i'
-        })
+        }),
+        _id: { $ne: 'user-id-123' }
       });
     });
 
@@ -347,7 +351,7 @@ describe('User Controller', () => {
       await searchUsers(mockReq, mockRes);
 
       // Should only return essential fields for performance
-      expect(mockUserFind().select).toHaveBeenCalledWith('_id username email');
+      expect(mockUserFind().select).toHaveBeenCalledWith('_id username email profileImgUrl');
     });
   });
 });

@@ -18,7 +18,7 @@ import {mediasoupService} from './services/mediasoup.service';
 const app = express();
 app.use(
 	cors({
-		origin: process.env.FRONTEND_URL,
+		origin: process.env.FRONTEND_URL || '*',
 		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	})

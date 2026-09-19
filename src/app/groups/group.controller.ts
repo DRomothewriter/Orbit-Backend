@@ -106,14 +106,63 @@ export const createGroup = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const { initialMembersIds, group } = req.body;
 	const io = req.app.get('io');
+	
+	// Validation: topic is required and not empty
+	if (!group?.topic || group.topic.trim().length === 0) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'Group topic is required' });
+	}
+
 	//Tal vez revisar que si el grupo viene con communityId, el user y los initial members sean miembros de la community
 	try {
+		const isDirectChat = !group?.communityId && Array.isArray(initialMembersIds) && initialMembersIds.length === 1;
+		if (isDirectChat) {
+			const friendId = initialMembersIds[0];
+			const currentUserMemberships = await GroupMember.find({ userId });
+			const friendMemberships = await GroupMember.find({ userId: friendId });
+
+			const currentUserGroupIds = new Set(
+				currentUserMemberships.map((member) => member.groupId.toString())
+			);
+			const sharedGroupIds = friendMemberships
+				.map((member) => member.groupId.toString())
+				.filter((groupId) => currentUserGroupIds.has(groupId));
+
+			for (const candidateGroupId of sharedGroupIds) {
+				const existingDirectChat = await Group.findOne({
+					_id: candidateGroupId,
+					communityId: { $exists: false },
+				});
+
+				if (!existingDirectChat) {
+					continue;
+				}
+
+				const members = await GroupMember.find({ groupId: candidateGroupId });
+				const memberIds = members.map((member) => member.userId.toString());
+
+				if (
+					members.length === 2 &&
+					memberIds.includes(userId.toString()) &&
+					memberIds.includes(friendId.toString())
+				) {
+					return res.status(Status.SUCCESS).json(existingDirectChat);
+				}
+			}
+		}
+
 		const newGroup = new Group(group);
 		await newGroup.save();
 
 		const groupId = newGroup._id.toString();
 		const newMember = new GroupMember({ userId, groupId, role: 'admin' });
 		await newMember.save();
+
+		const creatorSocket: any = connectedSockets.find(
+			(cS) => cS.userId?.toString() === userId.toString()
+		);
+		if (creatorSocket?.socketId && io.sockets.sockets.get(creatorSocket.socketId)) {
+			io.sockets.sockets.get(creatorSocket.socketId).join(groupId);
+		}
 
 		// Agregar los miembros iniciales
 		for (const memberId of initialMembersIds) {
@@ -124,8 +173,13 @@ export const createGroup = async (req: Request, res: Response) => {
 			});
 			await newMember.save();
 
-			const connectedSocket: any = connectedSockets.find(cS => cS.userId.toString() === userId.toString());
-			if (connectedSocket.socketId && io.sockets.sockets.get(connectedSocket.socketId)) {
+			const connectedSocket: any = connectedSockets.find(
+				(cS) => cS.userId?.toString() === memberId.toString()
+			);
+			if (
+				connectedSocket?.socketId &&
+				io.sockets.sockets.get(connectedSocket.socketId)
+			) {
 				io.sockets.sockets.get(connectedSocket.socketId).join(groupId);
 			}
 		}

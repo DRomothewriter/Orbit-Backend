@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "test": "jest",
@@ -55,7 +55,7 @@
     "mongoose": "^8.18.2",
     "multer": "^2.0.2",
     "multer-s3": "^3.0.1",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^7.0.13",
     "socket.io": "^4.8.1"
   }
 }
