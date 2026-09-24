@@ -15,21 +15,45 @@ import cors from 'cors';
 import {mediasoupService} from './services/mediasoup.service';
 
 
-const app = express();
-app.use(
-	cors({
-		origin: process.env.FRONTEND_URL || '*',
-		credentials: true,
-		methods: ['GET', 'POST', 'PUT', 'DELETE'],
-	})
+const defaultAllowedOrigins = [
+	'https://orbit.diego-romo-dev.com',
+	'http://localhost:4200',
+];
+
+const envAllowedOrigins = process.env.ALLOWED_ORIGINS
+	? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+	: [];
+
+export const allowedOrigins: string[] = Array.from(
+	new Set(
+		[
+			...envAllowedOrigins,
+			process.env.FRONTEND_URL,
+			...defaultAllowedOrigins,
+		].filter(Boolean) as string[]
+	)
 );
 
+export const corsOptions: cors.CorsOptions = {
+	origin: (origin, callback) => {
+		if (!origin || allowedOrigins.includes(origin)) {
+			return callback(null, true);
+		}
+		return callback(null, false);
+	},
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+const app = express();
+app.use(cors(corsOptions));
 
 const server: http.Server = createServer(app);
 const io = new Server(server, {
 	cors: {
-		origin: process.env.FRONTEND_URL,
-		methods: ['GET', 'POST','PUT', 'DELETE'],
+		origin: allowedOrigins,
+		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		credentials: true,
 	},
 });
@@ -65,10 +89,15 @@ const startServer = async () => {
 }
 
 
-dbConnect()
-	.then(() => {
-		startServer();
-	})
-	.catch(() => {
-		console.log('Failed to connect to the database');
-	});
+if (process.env.NODE_ENV !== 'test') {
+	dbConnect()
+		.then(() => {
+			startServer();
+		})
+		.catch(() => {
+			console.log('Failed to connect to the database');
+		});
+}
+
+export { app, server, io, startServer };
+
