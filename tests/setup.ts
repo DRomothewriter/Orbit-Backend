@@ -16,20 +16,43 @@ jest.mock('nodemailer', () => ({
   })
 }));
 
-// Mock file upload paths
-jest.mock('fs', () => ({
-  existsSync: jest.fn().mockReturnValue(true),
-  mkdirSync: jest.fn()
+// Mock bcrypt
+jest.mock('bcrypt', () => ({
+  compare: jest.fn().mockResolvedValue(true),
+  hash: jest.fn().mockResolvedValue('$2b$10$hashedpassword'),
+  genSalt: jest.fn().mockResolvedValue('$2b$10$saltsalt')
 }));
 
+// Mock file upload paths
+jest.mock('fs', () => {
+  const actualFs = jest.requireActual('fs');
+  return {
+    ...actualFs,
+    existsSync: jest.fn().mockReturnValue(true),
+    mkdirSync: jest.fn()
+  };
+});
+
 // Mock mongoose connection for tests that don't need real DB
-jest.mock('mongoose', () => ({
-  connect: jest.fn().mockResolvedValue({}),
-  connection: {
-    dropDatabase: jest.fn().mockResolvedValue({}),
-    close: jest.fn().mockResolvedValue({}),
-    collections: {}
-  },
-  model: jest.fn(),
-  Schema: jest.fn().mockImplementation(() => ({}))
-}));
+jest.mock('mongoose', () => {
+  const types = {
+    String: String,
+    ObjectId: String,
+    Boolean: Boolean,
+    Number: Number,
+    Date: Date,
+  };
+  return {
+    connect: jest.fn().mockResolvedValue({}),
+    connection: {
+      dropDatabase: jest.fn().mockResolvedValue({}),
+      close: jest.fn().mockResolvedValue({}),
+      collections: {}
+    },
+    model: jest.fn(),
+    Schema: Object.assign(jest.fn().mockImplementation(() => ({})), {
+      Types: types
+    }),
+    SchemaTypes: types
+  };
+});
