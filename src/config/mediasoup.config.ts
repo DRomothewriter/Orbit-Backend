@@ -27,17 +27,29 @@ export const routerOptions = {
 	],
 };
 
+export const getAnnouncedIp = (): string => {
+	if (process.env.MEDIASOUP_ANNOUNCED_IP) {
+		return process.env.MEDIASOUP_ANNOUNCED_IP;
+	}
+	if (process.env.NODE_ENV === 'production') {
+		console.warn(
+			'⚠️ [Mediasoup] MEDIASOUP_ANNOUNCED_IP no está configurada en producción. Se usará 127.0.0.1 como fallback. Para conexiones externas, configure la Elastic IP pública en MEDIASOUP_ANNOUNCED_IP.'
+		);
+	}
+	return '127.0.0.1';
+};
+
 export const webRtcTransportOptions = {
 	listenInfos: [
 		{
 			protocol: 'udp' as const,
 			ip: process.env.MEDIASOUP_LISTEN_IP || '0.0.0.0',
-			announcedAddress: process.env.MEDIASOUP_ANNOUNCED_IP || undefined,
+			announcedAddress: getAnnouncedIp(),
 		},
 		{
 			protocol: 'tcp' as const,
 			ip: process.env.MEDIASOUP_LISTEN_IP || '0.0.0.0',
-			announcedAddress: process.env.MEDIASOUP_ANNOUNCED_IP || undefined,
+			announcedAddress: getAnnouncedIp(),
 		},
 	],
     maxIncomingBitrate: 800000,                  
