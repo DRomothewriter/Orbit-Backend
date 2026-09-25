@@ -15,11 +15,11 @@ export const createTask = async(req: Request, res: Response) => {
     }
 }
 
-export const viewTaskById = async (req:Request, res: Response) => {
-    const taskId = req.params.id;
+export const viewTaskById = async (req: Request, res: Response) => {
+    const taskId = req.params.taskId || req.params.id;
     try {
         const task = await Task.findById(taskId);
-        return res.status(Status.CREATED).json({ Task: task});
+        return res.status(Status.SUCCESS).json({ Task: task });
     } catch (e) {
         return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
     }
@@ -36,7 +36,7 @@ export const modifyTask = async(req: Request, res: Response) => {
 }
 
 export const deleteTask = async(req: Request, res: Response) =>{
-    const taskId = req.params.id;
+    const taskId = req.params.taskId || req.params.id;
     try {
         const deletedTask = await Task.findByIdAndDelete(taskId);
         return res.status(Status.SUCCESS).json({deletedTask: deletedTask});
