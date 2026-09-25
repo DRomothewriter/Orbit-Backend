@@ -1,52 +1,139 @@
-name: Deploy to EC2
+name: Orbit Backend CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main  # Se ejecuta solo cuando se hace push a main
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: orbit-backend-production
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  deploy:
+  test:
+    name: Run Automated Tests
     runs-on: ubuntu-latest
-
     steps:
-    # 1. Clonar el repositorio
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2. Configurar Node.js 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22'  # Ajusta a tu versión de Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-    # 3. Instalar dependencias
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-    # 4. Ejecutar pruebas
-#   - name: Run tests
-#      run: npm test
+      - name: Execute test suite
+        run: npm run test:ci
 
-    # 5. Copiar clave privada para SSH
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+  build-and-deploy:
+    name: Build, Push ECR and Deploy to EC2
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 6. Desplegar en EC2
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}<< 'EOF'
-          cd /var/www/orbit-backend/
-          echo "Pulling latest changes..."
-          git pull origin main
-          echo "Installing dependencies..."
-          npm install
-          echo "Building TypeScript..."
-          npm run build
-          echo "Restarting PM2..."
-          pm2 restart all
-          pm2 list
-          echo "Deploy finished"
-        EOF
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+          role-session-name: GitHubActions-OrbitBackend-${{ github.run_id }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'orbit-backend' }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Building Docker container for Orbit Backend..."
+          docker build \
+            --tag "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            --tag "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
+            .
+
+          echo "Pushing images to Amazon ECR..."
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+          echo "image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to EC2 via AWS SSM Run Command
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        run: |
+          echo "Triggering unattended deployment on EC2 instance $INSTANCE_ID via AWS SSM..."
+          
+          COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy Orbit Backend commit ${{ github.sha }} from ECR" \
+            --parameters "commands=[
+              \"set -e\",
+              \"cd /opt/orbit\",
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+              \"docker compose -f docker-compose.prod.yml pull backend\",
+              \"docker compose -f docker-compose.prod.yml up -d --remove-orphans backend\",
+              \"docker compose -f docker-compose.prod.yml ps\",
+              \"docker image prune -f\"
+            ]" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command dispatched successfully. Command ID: $COMMAND_ID"
+          echo "Waiting for command execution to complete on EC2..."
+
+          aws ssm wait command-executed \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+          STATUS=$(aws ssm get-command-invocation \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+
+          echo "Deployment Status: $STATUS"
+
+          echo "=== Execution Output ==="
+          aws ssm get-command-invocation \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "=== Execution Error Details ==="
+            aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text
+            exit 1
+          fi
+
+          echo "Orbit Backend container deployed successfully!"

@@ -309,3 +309,30 @@ http://localhost:3000/swagger
 | MEDIASOUP_MIN_PORT     | Puerto UDP mínimo para RTP (10000, abrir en AWS Security Group)                          |
 | MEDIASOUP_MAX_PORT     | Puerto UDP máximo para RTP (10100, abrir en AWS Security Group)                          |
 
+## Pipeline de CI/CD (GitHub Actions - Orbit-0017)
+
+El despliegue de `Orbit-Backend` está completamente automatizado mediante GitHub Actions (`.github/workflows/deploy.yml`), eliminando accesos directos por SSH o credenciales estáticas de AWS:
+
+### 1. Autenticación OIDC con AWS
+GitHub Actions asume dinámicamente un rol IAM federado en AWS mediante tokens web (OIDC), otorgando únicamente los permisos de menor privilegio requeridos para build, push a Amazon ECR y ejecución de despliegues vía AWS SSM.
+
+### 2. Variables y Secretos Requeridos en GitHub
+Para configurar el pipeline en el repositorio de GitHub (`Settings > Secrets and variables > Actions`):
+
+#### **Variables del Repositorio (Repository Variables):**
+- `AWS_REGION`: Región principal de AWS (ej. `us-east-2`).
+- `ECR_REPOSITORY`: Nombre del repositorio privado en ECR (ej. `orbit-backend`).
+
+#### **Secretos del Repositorio (Repository Secrets):**
+- `AWS_ROLE_ARN`: ARN del rol IAM asumible por GitHub Actions generado por Terraform (ej. `arn:aws:iam::<ACCOUNT_ID>:role/orbit-github-actions-role-production`).
+- `EC2_INSTANCE_ID`: Identificador de la instancia EC2 de backend (ej. `i-0123456789abcdef0`).
+
+### 3. Fases del Flujo de Trabajo
+1. **Validación de Calidad:** Ejecución previa de la suite completa de pruebas (`npm run test:ci`). Si los tests fallan, el despliegue se cancela inmediatamente.
+2. **Construcción y Registro de Contenedor:** Build con Docker Buildx y push de la imagen etiquetada con el hash del commit (`${{ github.sha }}`) y `latest` hacia Amazon ECR.
+3. **Despliegue Desatendido en EC2 vía AWS SSM:**
+   - La acción invoca AWS SSM Run Command (`AWS-RunShellScript`) directamente sobre la instancia EC2.
+   - La EC2 inicia sesión en ECR con su rol IAM nativo.
+   - Descarga la nueva imagen y recrea el contenedor en `/opt/orbit` con Docker Compose (`docker compose -f docker-compose.prod.yml up -d --remove-orphans backend`).
+   - Se limpian imágenes huérfanas con `docker image prune -f`.
+
