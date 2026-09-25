@@ -212,7 +212,7 @@ Los tests utilizan:
 - **Setup y teardown** automático de base de datos
 
 ### Estadísticas Actuales
-- **8 suites de tests**
+- **9 suites de tests**
 - Auth Controller Tests
 - Auth Middleware Tests
 - User Controller Tests
@@ -220,6 +220,8 @@ Los tests utilizan:
 - Validation Tests
 - Integration Workflows Tests
 - Utils Tests
+- CORS Security Tests
+- Mediasoup Config Tests
 - Cobertura de funcionalidades principales
 
 ## Estructura del proyecto
@@ -254,8 +256,24 @@ tests/
   validation.test.ts
   integration.workflows.test.ts
   utils.test.ts
+  cors.test.ts
+  mediasoup.config.test.ts
   setup.ts
 ```
+
+## Configuración de Producción y Networking (AWS EC2)
+
+Para desplegar Orbit en AWS EC2 con soporte completo de videollamadas WebRTC (Mediasoup), configure los siguientes parámetros de red y entorno:
+
+### 1. Security Groups de AWS
+Mediasoup requiere que los clientes WebRTC negocien y transmitan paquetes de audio/video directamente al servidor a través de puertos UDP:
+- **Puertos UDP `10000 - 10100`**: Agregar una regla de entrada (Inbound Rule) permitiendo tráfico UDP en el rango `10000-10100` desde cualquier origen (`0.0.0.0/0` en IPv4 y opcionalmente `::/0` en IPv6).
+- **Puerto de la API / WebSockets (`3000` o `80`/`443` con Reverse Proxy/Nginx)**: Tráfico TCP para señalización de sockets y llamadas REST.
+
+### 2. IP Anunciada (`MEDIASOUP_ANNOUNCED_IP`)
+- En **producción**, configure la variable de entorno `MEDIASOUP_ANNOUNCED_IP` con la **Elastic IP pública** asignada a la instancia de AWS EC2.
+  > **Nota**: Si se omite o se deja una IP privada, los clientes fuera de la red local de AWS no podrán completar el handshake ICE y la llamada no transmitirá medios.
+- En **desarrollo local**, puede omitirse o definirse como `127.0.0.1`.
 
 ## Documentación Swagger
 Puedes consultar y probar los endpoints desde la interfaz Swagger en:
@@ -265,24 +283,25 @@ http://localhost:3000/swagger
 
 ## Variables de entorno
 
-| Variable               | Descripción                                    |
-|------------------------|------------------------------------------------|
-| PORT                   | Puerto en el que corre el servidor (3000)      |
-| MONGO_URI              | URI de conexión a MongoDB                      |
-| JWT_SECRET             | Palabra clave para encriptar tokens JWT        |
-| S3_ACCESS_KEY          | Access key de AWS S3                           |
-| S3_SECRET_KEY          | Secret key de AWS S3                           |
-| S3_REGION              | Región de AWS S3                               |
-| GOOGLE_ID              | Client ID de Google OAuth                      |
-| GOOGLE_CLIENT_ID       | Client ID de Google OAuth                      |
-| FRONTEND_URL           | URL del frontend (sin / al final)              |
-| FROM_EMAIL             | Email remitente para correos del sistema       |
-| SMTP_HOST              | Host del servidor SMTP                         |
-| SMTP_PORT              | Puerto del servidor SMTP                       |
-| SMTP_SECURE            | Usar SSL/TLS (true/false)                      |
-| SMTP_USER              | Usuario para autenticación SMTP                |
-| SMTP_PASS              | Contraseña para autenticación SMTP             |
-| MEDIASOUP_LISTEN_IP    | IP donde Mediasoup escucha (0.0.0.0)           |
-| MEDIASOUP_ANNOUNCED_IP | IP pública anunciada para Mediasoup            |
-| MEDIASOUP_MIN_PORT     | Puerto mínimo para RTP (10000)                 |
-| MEDIASOUP_MAX_PORT     | Puerto máximo para RTP (10100)                 |
+| Variable               | Descripción                                                                              |
+|------------------------|------------------------------------------------------------------------------------------|
+| PORT                   | Puerto en el que corre el servidor (3000)                                                |
+| MONGO_URI              | URI de conexión a MongoDB                                                                |
+| JWT_SECRET             | Palabra clave para encriptar tokens JWT                                                  |
+| S3_ACCESS_KEY          | Access key de AWS S3                                                                     |
+| S3_SECRET_KEY          | Secret key de AWS S3                                                                     |
+| S3_REGION              | Región de AWS S3                                                                         |
+| GOOGLE_ID              | Client ID de Google OAuth                                                                |
+| GOOGLE_CLIENT_ID       | Client ID de Google OAuth                                                                |
+| FRONTEND_URL           | URL del frontend (sin / al final)                                                        |
+| FROM_EMAIL             | Email remitente para correos del sistema                                                 |
+| SMTP_HOST              | Host del servidor SMTP                                                                   |
+| SMTP_PORT              | Puerto del servidor SMTP                                                                 |
+| SMTP_SECURE            | Usar SSL/TLS (true/false)                                                                |
+| SMTP_USER              | Usuario para autenticación SMTP                                                          |
+| SMTP_PASS              | Contraseña para autenticación SMTP                                                       |
+| MEDIASOUP_LISTEN_IP    | IP donde Mediasoup escucha localmente (0.0.0.0)                                          |
+| MEDIASOUP_ANNOUNCED_IP | IP pública anunciada para WebRTC (Elastic IP en producción, 127.0.0.1 en local)          |
+| MEDIASOUP_MIN_PORT     | Puerto UDP mínimo para RTP (10000, abrir en AWS Security Group)                          |
+| MEDIASOUP_MAX_PORT     | Puerto UDP máximo para RTP (10100, abrir en AWS Security Group)                          |
+

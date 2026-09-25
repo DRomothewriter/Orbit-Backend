@@ -83,6 +83,7 @@ export const google = async (req: Request, res: Response) => {
 		);
 		return res.status(Status.SUCCESS).json({ token, user });
 	} catch (err) {
+		console.error('[Google Auth Error]:', err);
 		return res
 			.status(Status.UNAUTHORIZED)
 			.json({ error: 'Token de Google inválido:' + err });
