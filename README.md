@@ -104,11 +104,13 @@ La documentación de la API está disponible en: `http://localhost:3000/swagger`
 - `POST /messages/reaction` — Crear una reacción para un mensaje
 - `DELETE /messages/reaction/{reactionId}` — Eliminar una reacción de un mensaje
 
-### Tareas
-- `POST /tasks` — Crear tarea
-- `GET /tasks/{taskId}` — Obtener tarea por ID
-- `PUT /tasks/modifyTask` — Modificar tarea
-- `DELETE /tasks/{taskId}` — Eliminar tarea
+### Tareas [Experimental / v2]
+> **Nota de versión:** Estos endpoints forman la base del módulo de gestión de tareas colaborativas para el roadmap v2. No son consumidos por el cliente Frontend en v1, pero se encuentran aislados, protegidos por `authMiddleware` y documentados en Swagger bajo el tag `Tasks [Experimental / v2]`.
+
+- `POST /tasks` — Crear tarea `[Experimental / v2]`
+- `GET /tasks/{taskId}` — Obtener tarea por ID `[Experimental / v2]`
+- `PUT /tasks/modifyTask` — Modificar tarea `[Experimental / v2]`
+- `DELETE /tasks/{taskId}` — Eliminar tarea `[Experimental / v2]`
 
 ### Notificaciones
 - `GET /notifications` — Obtener notificaciones del usuario
@@ -212,7 +214,7 @@ Los tests utilizan:
 - **Setup y teardown** automático de base de datos
 
 ### Estadísticas Actuales
-- **9 suites de tests**
+- **10 suites de tests**
 - Auth Controller Tests
 - Auth Middleware Tests
 - User Controller Tests
@@ -222,6 +224,7 @@ Los tests utilizan:
 - Utils Tests
 - CORS Security Tests
 - Mediasoup Config Tests
+- Tasks Isolation & Documentation Tests
 - Cobertura de funcionalidades principales
 
 ## Estructura del proyecto
@@ -258,6 +261,7 @@ tests/
   utils.test.ts
   cors.test.ts
   mediasoup.config.test.ts
+  tasks.isolation.test.ts
   setup.ts
 ```
 
