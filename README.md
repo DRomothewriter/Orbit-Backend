@@ -64,6 +64,10 @@ El servidor se ejecutará por defecto en `http://localhost:3000`.
 
 La documentación de la API está disponible en: `http://localhost:3000/swagger`
 
+Endpoints de observabilidad y especificación:
+- `GET /health` — Healthcheck de disponibilidad (`{ "status": "ok", "timestamp": "..." }`, HTTP 200)
+- `GET /swagger.json` — Especificación OpenAPI 3.1.0 en formato JSON (usada por OWASP ZAP API Scan)
+
 ## Rutas principales
 
 ### Autenticación
@@ -141,6 +145,8 @@ La documentación de la API está disponible en: `http://localhost:3000/swagger`
 - `npm test` — Ejecuta todos los tests
 - `npm run test:watch` — Ejecuta los tests en modo watch
 - `npm run test:coverage` — Ejecuta los tests con reporte de cobertura
+- `npm run test:ci` — Ejecuta la suite completa en modo CI con cobertura (`lcov` y `json-summary`)
+- `npm run audit:ci` — Audita dependencias de producción (`--omit=dev --audit-level=high`)
 
 ## Testing
 
@@ -214,7 +220,7 @@ Los tests utilizan:
 - **Setup y teardown** automático de base de datos
 
 ### Estadísticas Actuales
-- **10 suites de tests**
+- **13 suites de tests**
 - Auth Controller Tests
 - Auth Middleware Tests
 - User Controller Tests
@@ -225,6 +231,9 @@ Los tests utilizan:
 - CORS Security Tests
 - Mediasoup Config Tests
 - Tasks Isolation & Documentation Tests
+- Pruebas del Workflow de Release y Despliegue (`tests/deploy.workflow.test.ts`)
+- Pruebas de Workflows DevSecOps y Políticas (`tests/security.workflows.test.ts`)
+- Pruebas de Healthcheck y Especificación Swagger (`tests/swagger.health.test.ts`)
 - Cobertura de funcionalidades principales
 
 ## Estructura del proyecto
@@ -262,6 +271,9 @@ tests/
   cors.test.ts
   mediasoup.config.test.ts
   tasks.isolation.test.ts
+  deploy.workflow.test.ts
+  security.workflows.test.ts
+  swagger.health.test.ts
   setup.ts
 ```
 
@@ -279,10 +291,12 @@ Mediasoup requiere que los clientes WebRTC negocien y transmitan paquetes de aud
   > **Nota**: Si se omite o se deja una IP privada, los clientes fuera de la red local de AWS no podrán completar el handshake ICE y la llamada no transmitirá medios.
 - En **desarrollo local**, puede omitirse o definirse como `127.0.0.1`.
 
-## Documentación Swagger
-Puedes consultar y probar los endpoints desde la interfaz Swagger en:
+## Documentación Swagger y Healthcheck
+Puedes consultar y probar los endpoints desde la interfaz Swagger o consumir el esquema OpenAPI JSON y el healthcheck:
 ```
 http://localhost:3000/swagger
+http://localhost:3000/swagger.json
+http://localhost:3000/health
 ```
 
 ## Variables de entorno
@@ -309,30 +323,84 @@ http://localhost:3000/swagger
 | MEDIASOUP_MIN_PORT     | Puerto UDP mínimo para RTP (10000, abrir en AWS Security Group)                          |
 | MEDIASOUP_MAX_PORT     | Puerto UDP máximo para RTP (10100, abrir en AWS Security Group)                          |
 
-## Pipeline de CI/CD (GitHub Actions - Orbit-0017)
+## Arquitectura DevSecOps y CI/CD (GitHub Actions)
 
-El despliegue de `Orbit-Backend` está completamente automatizado mediante GitHub Actions (`.github/workflows/deploy.yml`), eliminando accesos directos por SSH o credenciales estáticas de AWS:
+`Orbit-Backend` implementa una arquitectura **DevSecOps** progresiva (*Shift-Left Security*) alineada al flujo de ramas:
 
-### 1. Autenticación OIDC con AWS
-GitHub Actions asume dinámicamente un rol IAM federado en AWS mediante tokens web (OIDC), otorgando únicamente los permisos de menor privilegio requeridos para build, push a Amazon ECR y ejecución de despliegues vía AWS SSM.
+```text
+feature / bug / docs ──▶ dev ──▶ main ──▶ release (aprobación manual en environment: production)
+```
 
-### 2. Variables y Secretos Requeridos en GitHub
-Para configurar el pipeline en el repositorio de GitHub (`Settings > Secrets and variables > Actions`):
+Se eliminó el despliegue automático al hacer `push` a `main` y todos los pipelines aplican política **fail-gate en severidades `HIGH` y `CRITICAL`**, usando autenticación federada vía **AWS OIDC** (sin claves estáticas ni acceso SSH).
 
-#### **Variables del Repositorio (Repository Variables):**
-- `AWS_REGION`: Región principal de AWS (ej. `us-east-2`).
-- `ECR_REPOSITORY`: Nombre del repositorio privado en ECR (ej. `orbit-backend`).
+### 1. Workflows de Seguridad y Despliegue
 
-#### **Secretos del Repositorio (Repository Secrets):**
-- `AWS_ROLE_ARN`: ARN del rol IAM asumible por GitHub Actions generado por Terraform (ej. `arn:aws:iam::<ACCOUNT_ID>:role/orbit-github-actions-role-production`).
-- `EC2_INSTANCE_ID`: Identificador de la instancia EC2 de backend (ej. `i-0123456789abcdef0`).
+| Workflow | Trigger | Controles ejecutados |
+|---|---|---|
+| **`.github/workflows/ci-dev.yml`** | `pull_request` hacia `dev` | Validación de rama origen (bloquea `main → dev`, verifica prefijo), `npm ci && npm run build`, **TruffleHog** (`--only-verified`), **Dependency Review** (`high`), `npm audit --omit=dev --audit-level=high` y **Snyk Open Source** (SARIF). |
+| **`.github/workflows/security-main.yml`** | `pull_request` hacia `main`, `push` a `main` (sin deploy), `workflow_dispatch` | Verifica origen `dev`, **Jest (`npm run test:ci`)**, **SonarCloud** (`sonar.qualitygate.wait=true`), **CodeQL** (`javascript-typescript`, `security-extended`), **Snyk Code + Snyk Container**, **Hadolint** (`Dockerfile`), **Syft** (CycloneDX + SPDX), **Grype** (`severity-cutoff: high`) y **DAST OWASP ZAP API Scan** contra `mongo:7` y `/swagger.json` (`.zap/rules.tsv`). |
+| **`.github/workflows/release.yml`** | `release: [published]` y `workflow_dispatch` | Verifica ancestro en `origin/main` y tag SemVer, build multi-stage y push a **Amazon ECR** por digest inmutable `@sha256`, **Syft + Grype**, firma y attestation **Cosign Keyless (OIDC)**, **GitHub Artifact Attestations** (`attest-build-provenance` y `attest-sbom`), `SHA256SUMS.txt`, assets en GitHub Release y deploy vía **AWS SSM** tras aprobación manual en el environment `production` y re-verificación `cosign verify`. |
 
-### 3. Fases del Flujo de Trabajo
-1. **Validación de Calidad:** Ejecución previa de la suite completa de pruebas (`npm run test:ci`). Si los tests fallan, el despliegue se cancela inmediatamente.
-2. **Construcción y Registro de Contenedor:** Build con Docker Buildx y push de la imagen etiquetada con el hash del commit (`${{ github.sha }}`) y `latest` hacia Amazon ECR.
-3. **Despliegue Desatendido en EC2 vía AWS SSM:**
-   - La acción invoca AWS SSM Run Command (`AWS-RunShellScript`) directamente sobre la instancia EC2.
-   - La EC2 inicia sesión en ECR con su rol IAM nativo.
-   - Descarga la nueva imagen y recrea el contenedor en `/opt/orbit` con Docker Compose (`docker compose -f docker-compose.prod.yml up -d --remove-orphans backend`).
-   - Se limpian imágenes huérfanas con `docker image prune -f`.
+### 2. Matriz de Artefactos y Retención
+
+| Workflow | Artifact | Contenido | Retención | Destino adicional |
+|---|---|---|---|---|
+| `ci-dev.yml` | `dev-secrets-reports` | `trufflehog-results.json` | 14 días | — |
+| `ci-dev.yml` | `dev-sca-secrets-reports` | `npm-audit-report.json`, `snyk-sca.sarif` | 14 días | `snyk-sca.sarif` → GitHub Security |
+| `security-main.yml` | `test-coverage-lcov` | `coverage/lcov.info`, `coverage/coverage-summary.json` | 14 días | Consumido por SonarCloud |
+| `security-main.yml` | `sast-snyk-reports` | `snyk-code.sarif`, `snyk-container.sarif` | 30 días | GitHub Security (SARIF) |
+| `security-main.yml` | `sbom-and-grype-reports` | `sbom-cyclonedx.json`, `sbom-spdx.json`, `grype-report.json`, `grype-results.sarif`, `hadolint-report.sarif` | 30 días | `grype` y `hadolint` → GitHub Security |
+| `security-main.yml` | `dast-owasp-zap-xml` | `zap-report.xml`, `zap-report.html`, `zap-report.md` | 30 días | Resumen en `$GITHUB_STEP_SUMMARY` |
+| `release.yml` | `release-supply-chain-bundle-<tag>` | `sbom-cyclonedx-<tag>.json`, `sbom-spdx-<tag>.json`, `grype-release-<tag>.json`, `cosign-verify-<tag>.json`, `SHA256SUMS.txt` | 90 días | GitHub Release + firma OCI en ECR + Attestations |
+
+### 3. Verificación Local de Imágenes Firmadas (`cosign verify`)
+
+Para verificar criptográficamente una imagen publicada en Amazon ECR usando Cosign Keyless (Sigstore OIDC) y GitHub Artifact Attestations:
+
+```bash
+# 1. Autenticarse en Amazon ECR
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com
+
+# 2. Verificar firma Cosign por digest exacto
+cosign verify <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/orbit-backend@sha256:<DIGEST> \
+  --certificate-identity-regexp="^https://github\.com/DRomothewriter/Orbit-Backend/\.github/workflows/release\.yml@refs/.*$" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+
+# 3. Verificar provenance SLSA / SBOM con GitHub CLI
+gh attestation verify oci://<ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/orbit-backend@sha256:<DIGEST> \
+  --repo DRomothewriter/Orbit-Backend
+```
+
+### 4. Variables, Secretos y Apps Requeridos en GitHub
+
+Configurar en `Settings → Secrets and variables → Actions`:
+
+- **Secrets requeridos:**
+  - `AWS_ROLE_ARN` — ARN del rol IAM federado por OIDC para ECR y SSM.
+  - `EC2_INSTANCE_ID` — ID de la instancia EC2 de producción (ej. `i-0123456789abcdef0`).
+  - `SNYK_TOKEN` — Token de API de Snyk (SCA, SAST y Container).
+  - `SONAR_TOKEN` — Token de proyecto/usuario en SonarCloud.
+- **Dependabot Secrets (`Settings → Secrets and variables → Dependabot`):**
+  - `SNYK_TOKEN` — Configurar también en **Dependabot Secrets** para que los PR automáticos de `dependabot[bot]` hacia `dev` ejecuten el análisis SCA de Snyk. Si `SNYK_TOKEN` no está disponible para `dependabot[bot]`, `ci-dev.yml` omite únicamente Snyk manteniendo activos `Dependency Review` y `npm audit` (los PR de usuarios humanos siguen exigiendo `SNYK_TOKEN` fail-closed).
+- **Variables opcionales:**
+  - `AWS_REGION` (default: `us-east-2`)
+  - `ECR_REPOSITORY` (default: `orbit-backend`)
+  - `SONAR_ORGANIZATION` (default: `dromothewriter`)
+  - `SONAR_PROJECT_KEY` (default: `DRomothewriter_Orbit-Backend`)
+- **GitHub App:** Instalar **CodeRabbit** desde GitHub Marketplace sobre `DRomothewriter/Orbit-Backend` (utiliza `.coderabbit.yaml` en español `es-ES`).
+
+### 5. GitHub Policy Enforcement
+
+Las políticas de gobierno del repositorio se encuentran versionadas en el código:
+- `.github/CODEOWNERS` — Exige revisión de `@DRomothewriter` en `.github/`, `Dockerfile`, `package*.json`, `.zap/`, `.coderabbit.yaml`, `sonar-project.properties`, `scripts/` y `src/app/middlewares/`.
+- `.github/dependabot.yml` — Actualizaciones semanales agrupadas (`npm`, `docker`, `github-actions`) hacia la rama `dev`.
+- `.github/rulesets/` — Reglas declarativas para `main` (`main-ruleset.json`), `dev` (`dev-ruleset.json`) y tags `v*` (`tags-ruleset.json`).
+- `scripts/apply-github-policies.sh` — Script idempotente para aplicar rulesets, environment `production` (con aprobación manual y restricción `main`/`v*`) y alertas de seguridad vía `gh api`:
+
+```bash
+# Requiere GitHub CLI autenticado con permisos de administrador del repositorio
+gh auth login
+./scripts/apply-github-policies.sh DRomothewriter/Orbit-Backend
+```
+
 

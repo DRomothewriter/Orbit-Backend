@@ -12,6 +12,7 @@ module.exports = {
     "!src/index.ts",
     "!src/socket.ts",
   ],
+  coverageReporters: ["json", "json-summary", "lcov", "text", "clover"],
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
   testTimeout: 30000,
   clearMocks: true,

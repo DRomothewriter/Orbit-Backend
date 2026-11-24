@@ -67,7 +67,15 @@ app.get('', (req, res) => {
 	res.json({ message: `api works. Frontend en: ${process.env.FRONTEND_URL}` });
 });
 
+app.get('/health', (_req, res) => {
+	res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.get('/swagger.json', (_req, res) => {
+	res.setHeader('Content-Type', 'application/json');
+	res.status(200).json(swaggerDocs);
+});
 app.use('/swagger', serve, setup(swaggerDocs));
 
 setupSocket(io);

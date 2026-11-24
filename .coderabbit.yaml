@@ -1,0 +1,37 @@
+language: "es-ES"
+early_access: false
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - dev
+      - main
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        Revisar rigurosamente seguridad en Express, JWT, Socket.IO y Mongoose:
+        - Prevenir inyección NoSQL (sanitización de req.body/req.query/req.params antes de consultas Mongoose).
+        - Verificar autorización y ownership en middlewares y controladores (evitar IDOR o auth bypass).
+        - Evitar fugas de secretos, tokens o stack traces en respuestas HTTP y logs.
+        - Validar tipos, esquemas de entrada y manejo explícito de errores en bloques catch.
+    - path: ".github/workflows/**"
+      instructions: |
+        Validar seguridad de GitHub Actions:
+        - Principio de menor privilegio en permissions por job.
+        - Prevenir script injection evitando interpolación directa de ${{ github.* }} o ${{ inputs.* }} dentro de run: (usar variables env:).
+        - Confirmar fail-gates en severidades HIGH/CRITICAL y preservación de artefactos/SARIF.
+    - path: "Dockerfile"
+      instructions: |
+        Verificar endurecimiento del contenedor:
+        - Build multi-stage sin compiladores ni devDependencies en la imagen final.
+        - Ejecución con usuario sin privilegios (USER node) y presencia de HEALTHCHECK.
+chat:
+  auto_reply: true

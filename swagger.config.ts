@@ -6,9 +6,9 @@ const options: SwaggerOptions = {
 	swaggerDefinition: {
 		openapi: '3.1.0',
 		info: {
-			title: 'API Dummy',
+			title: 'Orbit Backend API',
 			description: 'API para fines educativos',
-			version: '0.0.1',
+			version: '1.0.0',
 		},
 		servers: [{ url: 'http://localhost:' + port }],
 		components: {
@@ -22,7 +22,7 @@ const options: SwaggerOptions = {
 		},
 		security: [{ bearerAuth: [] }],
 	},
-	apis: ['./src/**/*.ts'],
+	apis: ['./src/**/*.ts', './dist/src/**/*.js'],
 };
 
 export default options;
