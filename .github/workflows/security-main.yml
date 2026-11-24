@@ -234,6 +234,7 @@ jobs:
           image: orbit-backend:ci-scan
           fail-build: true
           severity-cutoff: high
+          only-fixed: true
           output-format: sarif
 
       - name: Export Grype JSON report
@@ -244,6 +245,7 @@ jobs:
           image: orbit-backend:ci-scan
           fail-build: true
           severity-cutoff: high
+          only-fixed: true
           output-format: json
 
       - name: Collect Grype SARIF and JSON outputs

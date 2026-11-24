@@ -665,12 +665,13 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     expect(content).toContain('environments/production');
   });
 
-  test('Dockerfile uses multi-stage node:22-bookworm-slim build, prunes devDependencies, runs as USER node, and defines HEALTHCHECK', () => {
+  test('Dockerfile uses multi-stage node:22-trixie-slim build, strips global npm/yarn in runtime, prunes devDependencies, runs as USER node, and defines HEALTHCHECK', () => {
     const dockerfile = readText('Dockerfile');
 
-    expect(dockerfile).toMatch(/FROM\s+node:22-bookworm-slim\s+AS\s+builder/i);
-    expect(dockerfile).toMatch(/FROM\s+node:22-bookworm-slim\s+AS\s+runtime/i);
+    expect(dockerfile).toMatch(/FROM\s+node:22-trixie-slim\s+AS\s+builder/i);
+    expect(dockerfile).toMatch(/FROM\s+node:22-trixie-slim\s+AS\s+runtime/i);
     expect(dockerfile).toContain('npm prune --omit=dev');
+    expect(dockerfile).toContain('/usr/local/lib/node_modules/npm');
     expect(dockerfile).toMatch(/^\s*USER\s+node\s*$/m);
     expect(dockerfile).toMatch(/HEALTHCHECK\b[\s\S]*\/health/);
     expect(dockerfile).toContain('CMD ["node", "dist/src/index.js"]');

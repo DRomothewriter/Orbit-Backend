@@ -131,6 +131,7 @@ jobs:
           image: ${{ steps.image-ref.outputs.image_ref }}@${{ steps.build-push.outputs.digest }}
           fail-build: true
           severity-cutoff: high
+          only-fixed: true
           output-format: json
 
       - name: Save Grype release JSON report
