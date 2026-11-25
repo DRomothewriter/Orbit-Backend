@@ -1,0 +1,423 @@
+name: Security Main Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-source-branch:
+    name: Verify PR originates from dev
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Reject PRs not originating from dev
+        if: github.head_ref != 'dev'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "::error::Solo se permite abrir Pull Requests hacia 'main' desde la rama 'dev'. Rama actual: '${HEAD_REF}'."
+          exit 1
+
+      - name: Confirm valid PR source branch
+        if: github.head_ref == 'dev'
+        run: echo "Rama origen válida ('dev')."
+
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Jest CI suite with coverage
+        run: npm run test:ci
+
+      - name: Upload test coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage-lcov
+          path: |
+            coverage/lcov.info
+            coverage/coverage-summary.json
+          retention-days: 14
+          if-no-files-found: error
+
+  sast-sonarcloud:
+    name: SAST - SonarCloud Quality Gate
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-coverage-lcov
+          path: coverage
+
+      - name: SonarCloud Scan & Quality Gate
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION || 'dromothewriter' }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY || 'DRomothewriter_Orbit-Backend' }}
+            -Dsonar.qualitygate.wait=true
+
+  sast-codeql:
+    name: SAST - CodeQL (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'
+
+  sast-snyk:
+    name: SAST & Container - Snyk Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies and Snyk CLI
+        run: |
+          npm ci
+          npm install -g snyk
+
+      - name: Run Snyk Code (SAST)
+        id: snyk-code
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --severity-threshold=high --sarif-file-output=snyk-code.sarif
+
+      - name: Build local Docker image for container scanning
+        run: docker build -t orbit-backend:ci-scan .
+
+      - name: Run Snyk Container scan
+        id: snyk-container
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk container test orbit-backend:ci-scan --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk-container.sarif
+
+      - name: Upload Snyk Code SARIF to GitHub Security
+        if: always() && hashFiles('snyk-code.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
+          category: snyk-code
+
+      - name: Upload Snyk Container SARIF to GitHub Security
+        if: always() && hashFiles('snyk-container.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-container.sarif
+          category: snyk-container
+
+      - name: Upload Snyk reports artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-snyk-reports
+          path: |
+            snyk-code.sarif
+            snyk-container.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Enforce Snyk HIGH/CRITICAL fail-gate
+        if: steps.snyk-code.outcome == 'failure' || steps.snyk-container.outcome == 'failure'
+        run: |
+          echo "::error::Snyk detectó hallazgos HIGH o CRITICAL en código o imagen Docker."
+          exit 1
+
+  container-sbom-grype:
+    name: Container - Hadolint, Syft SBOM & Grype
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile with Hadolint
+        id: hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          format: sarif
+          output-file: hadolint-report.sarif
+          failure-threshold: error
+
+      - name: Build local Docker image for SBOM and Grype
+        id: build-image
+        run: docker build -t orbit-backend:ci-scan .
+
+      - name: Generate CycloneDX SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: orbit-backend:ci-scan
+          format: cyclonedx-json
+          output-file: sbom-cyclonedx.json
+
+      - name: Generate SPDX SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: orbit-backend:ci-scan
+          format: spdx-json
+          output-file: sbom-spdx.json
+
+      - name: Scan image with Grype (HIGH/CRITICAL gate, SARIF)
+        id: grype-sarif
+        uses: anchore/scan-action@v6
+        with:
+          image: orbit-backend:ci-scan
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: sarif
+
+      - name: Export Grype JSON report
+        id: grype-json
+        if: always() && steps.build-image.outcome == 'success'
+        uses: anchore/scan-action@v6
+        with:
+          image: orbit-backend:ci-scan
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: json
+
+      - name: Collect Grype SARIF and JSON outputs
+        if: always()
+        env:
+          GRYPE_SARIF: ${{ steps.grype-sarif.outputs.sarif }}
+          GRYPE_JSON: ${{ steps.grype-json.outputs.json }}
+        run: |
+          if [ -n "$GRYPE_SARIF" ] && [ -f "$GRYPE_SARIF" ]; then
+            cp "$GRYPE_SARIF" grype-results.sarif
+          fi
+          if [ -n "$GRYPE_JSON" ] && [ -f "$GRYPE_JSON" ]; then
+            cp "$GRYPE_JSON" grype-report.json
+          fi
+
+      - name: Upload Hadolint SARIF to GitHub Security
+        if: always() && hashFiles('hadolint-report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint-report.sarif
+          category: hadolint
+
+      - name: Upload Grype SARIF to GitHub Security
+        if: always() && hashFiles('grype-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: grype-results.sarif
+          category: grype
+
+      - name: Upload SBOM, Hadolint & Grype reports artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-and-grype-reports
+          path: |
+            sbom-cyclonedx.json
+            sbom-spdx.json
+            grype-report.json
+            grype-results.sarif
+            hadolint-report.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+  dast-owasp-zap:
+    name: DAST - OWASP ZAP API Scan
+    needs: container-sbom-grype
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies and build application
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start ephemeral Orbit Backend and verify /health & /swagger.json
+        env:
+          PORT: 3000
+          NODE_ENV: development
+          MONGO_URI: mongodb://127.0.0.1:27017/orbit
+          JWT_SECRET: ci-dast-ephemeral-jwt-secret-not-for-prod
+          FRONTEND_URL: http://127.0.0.1:4200
+          MEDIASOUP_LISTEN_IP: 0.0.0.0
+          MEDIASOUP_ANNOUNCED_IP: 127.0.0.1
+          MEDIASOUP_MIN_PORT: 10000
+          MEDIASOUP_MAX_PORT: 10100
+          GOOGLE_CLIENT_ID: ci-dummy-google-client-id
+          S3_ACCESS_KEY: ci-dummy-s3-access
+          S3_SECRET_KEY: ci-dummy-s3-secret
+          S3_REGION: us-east-2
+          SMTP_HOST: 127.0.0.1
+          SMTP_PORT: 1025
+          SMTP_SECURE: 'false'
+          SMTP_USER: ci@orbit.local
+          SMTP_PASS: ci-dummy-smtp-pass
+          FROM_EMAIL: noreply@orbit.local
+        run: |
+          nohup node dist/src/index.js > /tmp/orbit-dast.log 2>&1 &
+          echo $! > /tmp/orbit-dast.pid
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health > /dev/null 2>&1; then
+              echo "Orbit Backend está listo en /health"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "::error::Orbit Backend no respondió en /health a tiempo."
+              cat /tmp/orbit-dast.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+          curl -fsS http://127.0.0.1:3000/swagger.json | node -e "
+            const fs = require('fs');
+            const doc = JSON.parse(fs.readFileSync(0, 'utf8'));
+            if (!doc.openapi || !doc.paths || Object.keys(doc.paths).length === 0) {
+              throw new Error('Invalid OpenAPI document on /swagger.json');
+            }
+            console.log('Validated OpenAPI spec:', doc.openapi, 'paths:', Object.keys(doc.paths).length);
+          "
+
+      - name: Run OWASP ZAP API Scan
+        env:
+          WORKSPACE_DIR: ${{ github.workspace }}
+        run: |
+          set +e
+          docker run --rm --network host \
+            -u "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
+            -v "${WORKSPACE_DIR}:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-api-scan.py \
+            -t http://127.0.0.1:3000/swagger.json \
+            -f openapi \
+            -c .zap/rules.tsv \
+            -x zap-report.xml \
+            -r zap-report.html \
+            -w zap-report.md
+          ZAP_EXIT=$?
+          set -e
+
+          if [ "$ZAP_EXIT" -eq 2 ]; then
+            echo "::warning::OWASP ZAP API Scan finalizó con alertas WARN (sin alertas HIGH/FAIL)."
+          elif [ "$ZAP_EXIT" -ne 0 ]; then
+            echo "::error::OWASP ZAP API Scan falló (código $ZAP_EXIT)."
+            exit "$ZAP_EXIT"
+          fi
+
+      - name: Stop ephemeral Orbit Backend
+        if: always()
+        run: |
+          if [ -f /tmp/orbit-dast.pid ]; then
+            kill "$(cat /tmp/orbit-dast.pid)" || true
+          fi
+
+      - name: Publish OWASP ZAP summary to step summary
+        if: always()
+        run: |
+          if [ -f zap-report.md ]; then
+            cat zap-report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No zap-report.md generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload OWASP ZAP reports (XML, HTML, MD)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-owasp-zap-xml
+          path: |
+            zap-report.xml
+            zap-report.html
+            zap-report.md
+          retention-days: 30
+          if-no-files-found: warn
