@@ -13,7 +13,7 @@ import routes from './app/routes';
 import { setupSocket } from './socket';
 import cors from 'cors';
 import {mediasoupService} from './services/mediasoup.service';
-
+const mongokey= "mongodb+srv://orbit_user:Mostafeo27@cluster0.8llpish.mongodb.net/orbit?appName=Cluster0"
 
 const defaultAllowedOrigins = [
 	'https://orbit.diego-romo-dev.com',
