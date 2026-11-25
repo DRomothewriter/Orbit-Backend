@@ -392,7 +392,7 @@ Configurar en `Settings → Secrets and variables → Actions`:
 ### 5. GitHub Policy Enforcement
 
 Las políticas de gobierno del repositorio se encuentran versionadas en el código:
-- `.github/CODEOWNERS` — Exige revisión de `@DRomothewriter` en `.github/`, `Dockerfile`, `package*.json`, `.zap/`, `.coderabbit.yaml`, `sonar-project.properties`, `scripts/` y `src/app/middlewares/`.
+- `.github/CODEOWNERS` — Exige revisión de propietarios (`@DRomothewriter`, `@CodeNoctis`, `@Adrian-Galindo147`) en `.github/`, `Dockerfile`, `package*.json`, `.zap/`, `.coderabbit.yaml`, `sonar-project.properties`, `scripts/` y `src/app/middlewares/`.
 - `.github/dependabot.yml` — Actualizaciones semanales agrupadas (`npm`, `docker`, `github-actions`) hacia la rama `dev`.
 - `.github/rulesets/` — Reglas declarativas para `main` (`main-ruleset.json`), `dev` (`dev-ruleset.json`) y tags `v*` (`tags-ruleset.json`).
 - `scripts/apply-github-policies.sh` — Script idempotente para aplicar rulesets, environment `production` (con aprobación manual y restricción `main`/`v*`) y alertas de seguridad vía `gh api`:
@@ -402,5 +402,18 @@ Las políticas de gobierno del repositorio se encuentran versionadas en el códi
 gh auth login
 ./scripts/apply-github-policies.sh DRomothewriter/Orbit-Backend
 ```
+
+### 6. Sincronización de `main` hacia `dev` después de cada release
+
+Dado que `main-ruleset.json` habilita `strict_required_status_checks_policy: true` y `ci-dev.yml` bloquea PRs abiertos directamente desde `main`, cualquier commit nuevo en `main` (por ejemplo, un release o hotfix) debe sincronizarse hacia `dev` mediante una rama intermedia con prefijo válido:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/sync-main
+git push -u origin feature/sync-main
+```
+
+Luego abre un Pull Request de `feature/sync-main` hacia `dev` para mantener ambas ramas alineadas antes del siguiente PR `dev → main`.
 
 

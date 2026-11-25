@@ -34,6 +34,7 @@ jobs:
       packages: read
     outputs:
       release_tag: ${{ steps.meta.outputs.release_tag }}
+      target_sha: ${{ steps.meta.outputs.target_sha }}
       image_ref: ${{ steps.image-ref.outputs.image_ref }}
       image_digest: ${{ steps.build-push.outputs.digest }}
     steps:
@@ -48,14 +49,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG_EVENT: ${{ github.event.release.tag_name }}
           RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
-          TARGET_SHA: ${{ github.sha }}
         run: |
-          git fetch origin main
-          if ! git merge-base --is-ancestor "$TARGET_SHA" origin/main; then
-            echo "::error::El commit $TARGET_SHA no es ancestro de origin/main."
-            exit 1
-          fi
-
           if [ "$EVENT_NAME" = "release" ]; then
             TAG="$RELEASE_TAG_EVENT"
           else
@@ -67,7 +61,19 @@ jobs:
             exit 1
           fi
 
+          git fetch origin main
+          git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          TARGET_SHA="$(git rev-list -n 1 "refs/tags/${TAG}")"
+
+          if ! git merge-base --is-ancestor "$TARGET_SHA" origin/main; then
+            echo "::error::El commit $TARGET_SHA del tag '$TAG' no es ancestro de origin/main."
+            exit 1
+          fi
+
+          git checkout --detach "$TARGET_SHA"
+
           echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -99,7 +105,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.image-ref.outputs.image_ref }}:${{ steps.meta.outputs.release_tag }}
-            ${{ steps.image-ref.outputs.image_ref }}:${{ github.sha }}
+            ${{ steps.image-ref.outputs.image_ref }}:${{ steps.meta.outputs.target_sha }}
             ${{ steps.image-ref.outputs.image_ref }}:latest
 
       - name: Export image reference output
@@ -143,6 +149,18 @@ jobs:
           if [ -n "$GRYPE_JSON" ] && [ -f "$GRYPE_JSON" ]; then
             cp "$GRYPE_JSON" "grype-release-${RELEASE_TAG}.json"
           fi
+
+      - name: Upload Grype & SBOM failure reports
+        if: failure() && steps.grype-release.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-grype-failure-${{ steps.meta.outputs.release_tag }}
+          path: |
+            sbom-cyclonedx-${{ steps.meta.outputs.release_tag }}.json
+            sbom-spdx-${{ steps.meta.outputs.release_tag }}.json
+            grype-release-${{ steps.meta.outputs.release_tag }}.json
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
@@ -258,7 +276,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
           RELEASE_TAG: ${{ needs.build-sign-attest.outputs.release_tag }}
-          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_SHA: ${{ needs.build-sign-attest.outputs.target_sha }}
         run: |
           echo "Triggering deployment on EC2 instance $INSTANCE_ID for release $RELEASE_TAG via AWS SSM..."
           COMMENT=$(printf 'Deploy Orbit Backend %s (%s)' "$RELEASE_TAG" "${DEPLOY_SHA:0:12}" | cut -c1-100)

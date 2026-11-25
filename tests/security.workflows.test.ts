@@ -77,17 +77,25 @@ describe('Workflow 1: CI Dev (.github/workflows/ci-dev.yml)', () => {
     expect(parsed.on?.pull_request?.branches).toEqual(expect.arrayContaining(['dev']));
     expect(raw).not.toMatch(/permissions:\s*write-all/i);
 
-    const allPermissions: Record<string, string> = {
-      ...(parsed.permissions ?? {}),
-    };
-    for (const job of Object.values(parsed.jobs ?? {})) {
-      Object.assign(allPermissions, job.permissions ?? {});
-    }
+    expect(parsed.permissions).toEqual({ contents: 'read' });
 
-    expect(allPermissions.contents).toBe('read');
-    expect(allPermissions['pull-requests']).toBe('read');
-    expect(allPermissions['security-events']).toBe('write');
-    expect(allPermissions['id-token']).toBeUndefined();
+    const jobs = parsed.jobs ?? {};
+    expect(jobs['validate-and-build']?.permissions).toEqual({
+      contents: 'read',
+    });
+    expect(jobs['secret-scanning']?.permissions).toEqual({
+      contents: 'read',
+      'pull-requests': 'read',
+    });
+    expect(jobs['sca-audit']?.permissions).toEqual({
+      contents: 'read',
+      'pull-requests': 'read',
+      'security-events': 'write',
+    });
+
+    for (const job of Object.values(jobs)) {
+      expect(job.permissions?.['id-token']).toBeUndefined();
+    }
   });
 
   test('Validates source branch is not main, checks recommended branch prefix, and builds TypeScript', () => {
@@ -551,6 +559,16 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
       expect(content).toContain(pattern);
     }
     expect(content).toMatch(/@[A-Za-z0-9_-]+/);
+
+    const ruleLines = content
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && !l.startsWith('#'));
+    expect(ruleLines.length).toBeGreaterThan(0);
+    for (const line of ruleLines) {
+      const owners = line.match(/@[A-Za-z0-9_-]+/g) ?? [];
+      expect(new Set(owners).size).toBeGreaterThanOrEqual(2);
+    }
   });
 
   test('.github/dependabot.yml configures version 2 updates for npm, docker, and github-actions targeting dev', () => {
@@ -616,6 +634,18 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
       expect(securityMainJobNames).toContain(ctx);
     }
 
+    const codeScanningRule = mainRules.find((r) => r.type === 'code_scanning');
+    expect(codeScanningRule).toBeDefined();
+    expect(codeScanningRule.parameters?.code_scanning_tools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tool: 'CodeQL',
+          alerts_threshold: 'errors',
+          security_alerts_threshold: 'high_or_higher',
+        }),
+      ])
+    );
+
     // dev-ruleset.json
     expect(devRuleset.target).toBe('branch');
     expect(devRuleset.enforcement).toBe('active');
@@ -663,9 +693,11 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     expect(content).toContain('gh api');
     expect(content).toContain('rulesets');
     expect(content).toContain('environments/production');
+    expect(content).toContain('deployment-branch-policies');
+    expect(content).toMatch(/--method\s+DELETE/);
   });
 
-  test('Dockerfile uses multi-stage node:22-trixie-slim build, strips global npm/yarn in runtime, prunes devDependencies, runs as USER node, and defines HEALTHCHECK', () => {
+  test('Dockerfile uses multi-stage node:22-trixie-slim build, strips global npm/yarn in runtime, prunes devDependencies, runs as USER node, and defines dynamic-port HEALTHCHECK', () => {
     const dockerfile = readText('Dockerfile');
 
     expect(dockerfile).toMatch(/FROM\s+node:22-trixie-slim\s+AS\s+builder/i);
@@ -673,7 +705,7 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     expect(dockerfile).toContain('npm prune --omit=dev');
     expect(dockerfile).toContain('/usr/local/lib/node_modules/npm');
     expect(dockerfile).toMatch(/^\s*USER\s+node\s*$/m);
-    expect(dockerfile).toMatch(/HEALTHCHECK\b[\s\S]*\/health/);
+    expect(dockerfile).toMatch(/HEALTHCHECK\b[\s\S]*process\.env\.PORT\s*\|\|\s*3000[\s\S]*\/health/);
     expect(dockerfile).toContain('CMD ["node", "dist/src/index.js"]');
   });
 
@@ -698,5 +730,30 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     for (const item of expectedExclusions) {
       expect(lines).toContain(item);
     }
+  });
+
+  test('release.yml checks out exact tag commit on workflow_dispatch and uploads Grype report on gate failure', () => {
+    const { parsed } = readYaml<GitHubWorkflow>('.github/workflows/release.yml');
+    const buildJob = parsed.jobs?.['build-sign-attest'];
+    expect(buildJob).toBeDefined();
+
+    const scripts = collectJobScripts(buildJob);
+    expect(scripts).toContain('git rev-list -n 1');
+    expect(scripts).toContain('git checkout --detach');
+    expect(scripts).toContain('target_sha=');
+
+    const failureUploadStep = (buildJob?.steps ?? []).find(
+      (s) =>
+        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        String(s.if ?? '').includes('grype-release.outcome')
+    );
+    expect(failureUploadStep).toBeDefined();
+    expect(String(failureUploadStep?.with?.path ?? '')).toContain('grype-release-');
+  });
+
+  test('README.md documents post-release main-to-dev synchronization via prefixed branch', () => {
+    const readme = readText('README.md');
+    expect(readme).toMatch(/feature\/sync-main/);
+    expect(readme).toMatch(/strict_required_status_checks_policy|sincroniz/i);
   });
 });

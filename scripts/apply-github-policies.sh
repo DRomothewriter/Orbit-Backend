@@ -78,6 +78,18 @@ ensure_branch_policy() {
 ensure_branch_policy "main" "branch"
 ensure_branch_policy "v*" "tag"
 
+# Elimina políticas previas fuera de main (branch) y v* (tag)
+while IFS=$'\t' read -r policy_id policy_name policy_type; do
+  [ -z "$policy_id" ] && continue
+  if { [ "$policy_name" = "main" ] && [ "$policy_type" = "branch" ]; } || \
+     { [ "$policy_name" = "v*" ] && [ "$policy_type" = "tag" ]; }; then
+    continue
+  fi
+  echo "Eliminando política no permitida en 'production': ${policy_type} '${policy_name}' (ID: ${policy_id})..."
+  gh api --method DELETE "/repos/${REPO}/environments/production/deployment-branch-policies/${policy_id}" >/dev/null
+done < <(gh api "/repos/${REPO}/environments/production/deployment-branch-policies" \
+  --jq '.branch_policies[] | "\(.id)\t\(.name)\t\(.type)"' || true)
+
 echo "Habilitando alertas de vulnerabilidades de Dependabot y seguridad del repositorio..."
 gh api --method PUT "/repos/${REPO}/vulnerability-alerts" >/dev/null 2>&1 || \
   echo "Aviso: no se pudieron habilitar vulnerability-alerts automáticamente (verifica permisos de admin)."
