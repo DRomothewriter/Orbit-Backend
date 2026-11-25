@@ -150,7 +150,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --sarif-file-output=snyk-sca.sarif
+          args: --severity-threshold=low --sarif-file-output=snyk-sca.sarif
 
       - name: Upload Snyk SCA SARIF to GitHub Security
         if: always() && steps.snyk-gate.outputs.run_snyk == 'true' && hashFiles('snyk-sca.sarif') != ''
