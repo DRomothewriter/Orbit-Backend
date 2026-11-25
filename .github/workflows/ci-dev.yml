@@ -145,12 +145,40 @@ jobs:
           fi
 
       - name: Run Snyk Open Source SCA
+        id: snyk-sca
         if: steps.snyk-gate.outputs.run_snyk == 'true'
+        continue-on-error: true
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=low --sarif-file-output=snyk-sca.sarif
+          args: --severity-threshold=low --sarif-file-output=snyk-sca.sarif --json-file-output=snyk-sca.json
+
+      - name: Evaluate Snyk SCA severities (warn low/medium, fail high/critical)
+        if: steps.snyk-gate.outputs.run_snyk == 'true'
+        run: |
+          node -e '
+            const fs = require("fs");
+            if (!fs.existsSync("snyk-sca.json")) {
+              console.error("::error::Snyk no generó snyk-sca.json (posible error de token o red).");
+              process.exit(1);
+            }
+            const data = JSON.parse(fs.readFileSync("snyk-sca.json", "utf8"));
+            const vulns = Array.isArray(data)
+              ? data.flatMap(r => r.vulnerabilities || [])
+              : (data.vulnerabilities || []);
+            const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+            for (const v of vulns) {
+              if (counts[v.severity] !== undefined) counts[v.severity]++;
+            }
+            if (counts.low > 0 || counts.medium > 0) {
+              console.log(`::warning::Snyk SCA detectó ${counts.medium} vulnerabilidades MEDIUM y ${counts.low} LOW.`);
+            }
+            if (counts.high > 0 || counts.critical > 0) {
+              console.error(`::error::Snyk SCA detectó ${counts.critical} CRITICAL y ${counts.high} HIGH. Merge bloqueado.`);
+              process.exit(1);
+            }
+          '
 
       - name: Upload Snyk SCA SARIF to GitHub Security
         if: always() && steps.snyk-gate.outputs.run_snyk == 'true' && hashFiles('snyk-sca.sarif') != ''
