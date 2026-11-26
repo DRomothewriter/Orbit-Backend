@@ -732,6 +732,8 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
 
     expect(dockerfile).toMatch(/FROM\s+node:22\.23\.5-alpine3\.24\s+AS\s+builder/i);
     expect(dockerfile).toMatch(/FROM\s+node:22\.23\.5-alpine3\.24\s+AS\s+runtime/i);
+    expect(dockerfile).toContain('CXXFLAGS="-include cstdint"');
+    expect(dockerfile).toContain('npm ci --ignore-scripts');
     expect(dockerfile).toContain('npm prune --omit=dev');
     expect(dockerfile).toContain('/usr/local/lib/node_modules/npm');
     expect(dockerfile).toMatch(/^\s*USER\s+node\s*$/m);

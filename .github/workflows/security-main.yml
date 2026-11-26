@@ -52,7 +52,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run Jest CI suite with coverage
         run: npm run test:ci
@@ -140,7 +140,8 @@ jobs:
       - name: Install dependencies and Snyk CLI
         run: |
           npm ci --ignore-scripts
-          npm install -g snyk@1.1309.0
+          npm install -g snyk@1.1309.0 --ignore-scripts
+          node "$(npm root -g)/snyk/wrapper_dist/bootstrap.js" exec
 
       - name: Run Snyk Code (SAST)
         id: snyk-code
@@ -317,7 +318,8 @@ jobs:
 
       - name: Install dependencies and build application
         run: |
-          npm ci
+          npm ci --ignore-scripts
+          node node_modules/mediasoup/npm-scripts.mjs postinstall
           npm run build
 
       - name: Start ephemeral Orbit Backend and verify /health & /swagger.json
