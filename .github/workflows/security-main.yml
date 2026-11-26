@@ -375,6 +375,7 @@ jobs:
           set +e
           docker run --rm --network host \
             -u "$(id -u):$(id -g)" \
+            --workdir /tmp \
             -e HOME=/tmp \
             -e JAVA_TOOL_OPTIONS="-Duser.home=/tmp" \
             -v "${WORKSPACE_DIR}:/zap/wrk:rw" \
