@@ -5,8 +5,11 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 py3-pip make g++ linux-headers
 
+ENV CXXFLAGS="-include cstdint"
+
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts \
+    && (cd node_modules/mediasoup && node npm-scripts.mjs postinstall)
 
 COPY tsconfig.json swagger.config.ts ./
 COPY src ./src
