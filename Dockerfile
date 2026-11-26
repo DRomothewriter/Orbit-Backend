@@ -1,5 +1,5 @@
 # Stage 1: Builder (compila Mediasoup C++ worker y TypeScript)
-FROM node:22.23.5-alpine3.24 AS builder
+FROM node:26.13.1-alpine3.24 AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN npm run build \
     && npm prune --omit=dev
 
 # Stage 2: Runtime mínimo sin compiladores, devDependencies ni gestores de paquetes globales
-FROM node:22.23.5-alpine3.24 AS runtime
+FROM node:26.13.1-alpine3.24 AS runtime
 
 WORKDIR /app
 
