@@ -43,7 +43,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -76,7 +76,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository with full history
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
           path: coverage
 
       - name: SonarCloud Scan & Quality Gate
-        uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -105,19 +105,19 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: javascript-typescript
           queries: security-extended
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/autobuild@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: '/language:javascript-typescript'
 
@@ -129,7 +129,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -162,14 +162,14 @@ jobs:
 
       - name: Upload Snyk Code SARIF to GitHub Security
         if: always() && hashFiles('snyk-code.sarif') != ''
-        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: snyk-code.sarif
           category: snyk-code
 
       - name: Upload Snyk Container SARIF to GitHub Security
         if: always() && hashFiles('snyk-container.sarif') != ''
-        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: snyk-container.sarif
           category: snyk-container
@@ -199,11 +199,11 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Lint Dockerfile with Hadolint
         id: hadolint
-        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: Dockerfile
           format: sarif
@@ -264,14 +264,14 @@ jobs:
 
       - name: Upload Hadolint SARIF to GitHub Security
         if: always() && hashFiles('hadolint-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: hadolint-report.sarif
           category: hadolint
 
       - name: Upload Grype SARIF to GitHub Security
         if: always() && hashFiles('grype-results.sarif') != ''
-        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: grype-results.sarif
           category: grype
@@ -308,7 +308,7 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

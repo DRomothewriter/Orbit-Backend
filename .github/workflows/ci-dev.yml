@@ -35,7 +35,7 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -57,7 +57,7 @@ jobs:
       pull-requests: read
     steps:
       - name: Checkout repository with full history
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -104,7 +104,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Dependency Review (PR diff HIGH/CRITICAL gate)
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
@@ -154,7 +154,7 @@ jobs:
 
       - name: Upload Snyk SCA SARIF to GitHub Security
         if: always() && steps.snyk-gate.outputs.run_snyk == 'true' && hashFiles('snyk-sca.sarif') != ''
-        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: snyk-sca.sarif
           category: snyk-sca
