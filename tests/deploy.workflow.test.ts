@@ -153,18 +153,18 @@ describe('DevSecOps Release & Deployment Workflow (.github/workflows/release.yml
     expect(scripts).toMatch(/\^v\[0-9\]\+/);
 
     const awsCredsStep = steps.find((s) =>
-      s.uses?.startsWith('aws-actions/configure-aws-credentials@v4')
+      s.uses?.startsWith('aws-actions/configure-aws-credentials@')
     );
     expect(awsCredsStep).toBeDefined();
     expect(String(awsCredsStep?.with?.['role-to-assume'] ?? '')).toContain('secrets.AWS_ROLE_ARN');
 
     const ecrLoginStep = steps.find((s) =>
-      s.uses?.startsWith('aws-actions/amazon-ecr-login@v2')
+      s.uses?.startsWith('aws-actions/amazon-ecr-login@')
     );
     expect(ecrLoginStep).toBeDefined();
 
     const buildPushStep = steps.find((s) =>
-      s.uses?.startsWith('docker/build-push-action@v6')
+      s.uses?.startsWith('docker/build-push-action@')
     );
     expect(buildPushStep).toBeDefined();
     expect(buildPushStep?.with?.push).toBe(true);
@@ -196,15 +196,15 @@ describe('DevSecOps Release & Deployment Workflow (.github/workflows/release.yml
       /--certificate-oidc-issuer[=\s]+["']?https:\/\/token\.actions\.githubusercontent\.com/
     );
 
-    expect(steps.some((s) => s.uses?.startsWith('actions/attest-build-provenance@v2'))).toBe(true);
-    expect(steps.some((s) => s.uses?.startsWith('actions/attest-sbom@v2'))).toBe(true);
+    expect(steps.some((s) => s.uses?.startsWith('actions/attest-build-provenance@'))).toBe(true);
+    expect(steps.some((s) => s.uses?.startsWith('actions/attest-sbom@'))).toBe(true);
 
     expect(scripts).toContain('SHA256SUMS.txt');
     expect(scripts).toMatch(/gh\s+release\s+upload/);
 
     const uploadBundleStep = steps.find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         /^release-supply-chain-bundle-/.test(String(s.with?.name ?? ''))
     );
     expect(uploadBundleStep).toBeDefined();
@@ -288,7 +288,7 @@ describe('DevSecOps Release & Deployment Workflow (.github/workflows/release.yml
     expect(buildJob).toBeDefined();
 
     const steps = buildJob?.steps ?? [];
-    const checkoutStep = steps.find((s) => s.uses?.startsWith('actions/checkout@v4'));
+    const checkoutStep = steps.find((s) => s.uses?.startsWith('actions/checkout@'));
     expect(checkoutStep?.with?.['fetch-depth']).toBe(0);
 
     const scripts = collectJobScripts(buildJob);
