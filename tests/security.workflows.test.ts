@@ -735,6 +735,7 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     expect(dockerfile).toContain('CXXFLAGS="-include cstdint"');
     expect(dockerfile).toContain('npm ci --ignore-scripts');
     expect(dockerfile).toContain('cd node_modules/mediasoup && node npm-scripts.mjs postinstall');
+    expect(dockerfile).toContain('apk upgrade --no-cache');
     expect(dockerfile).toContain('npm prune --omit=dev');
     expect(dockerfile).toContain('/usr/local/lib/node_modules/npm');
     expect(dockerfile).toMatch(/^\s*USER\s+node\s*$/m);

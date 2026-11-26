@@ -25,8 +25,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # libstdc++ es requerido en runtime por el binario C++ de mediasoup-worker;
-# elimina npm/npx/corepack/yarn globales del runtime (CMD ejecuta directamente node)
-RUN apk add --no-cache libstdc++ \
+# apk upgrade parchea libcrypto3/libssl3/zlib en Alpine y elimina gestores globales
+RUN apk upgrade --no-cache \
+    && apk add --no-cache libstdc++ \
     && rm -rf /usr/local/lib/node_modules/npm \
               /usr/local/lib/node_modules/corepack \
               /usr/local/bin/npm \
