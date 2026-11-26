@@ -1,0 +1,10 @@
+# Orbit-Backend Security & Build CODEOWNERS
+/.github/ @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/Dockerfile @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/.dockerignore @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/package*.json @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/.zap/ @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/.coderabbit.yaml @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/sonar-project.properties @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/scripts/ @DRomothewriter @CodeNoctis @Adrian-Galindo147
+/src/app/middlewares/ @DRomothewriter @CodeNoctis @Adrian-Galindo147

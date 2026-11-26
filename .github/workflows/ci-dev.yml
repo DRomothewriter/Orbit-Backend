@@ -1,0 +1,171 @@
+name: CI Dev Security & Build
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-build:
+    name: Validate Source Branch & TypeScript Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Validate source branch policy and naming convention
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" = "main" ]; then
+            echo "::error::No se permite abrir Pull Requests directamente desde 'main' hacia 'dev'."
+            exit 1
+          fi
+
+          if ! [[ "$HEAD_REF" =~ ^(feature/|bug/|fix/|docs/|chore/|refactor/|test/|dependabot/) ]]; then
+            echo "::warning::La rama '$HEAD_REF' no sigue un prefijo recomendado (feature/, bug/, fix/, docs/, chore/, refactor/, test/)."
+          else
+            echo "Rama origen válida: $HEAD_REF"
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build TypeScript
+        run: npm run build
+
+  secret-scanning:
+    name: Secret Scanning (TruffleHog)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog verified secret scan
+        id: trufflehog
+        uses: trufflesecurity/trufflehog@23255461ddf3958c4d949d89925b03eaf263d838 # main
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      - name: Record TruffleHog scan metadata
+        if: always()
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SCAN_OUTCOME: ${{ steps.trufflehog.outcome }}
+        run: |
+          cat <<EOF > trufflehog-results.json
+          {
+            "tool": "trufflehog",
+            "base": "${BASE_SHA}",
+            "head": "${HEAD_SHA}",
+            "extra_args": "--only-verified",
+            "outcome": "${SCAN_OUTCOME}"
+          }
+          EOF
+
+      - name: Upload TruffleHog scan report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dev-secrets-reports
+          path: trufflehog-results.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  sca-audit:
+    name: SCA (npm audit, Dependency Review & Snyk)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Dependency Review (PR diff HIGH/CRITICAL gate)
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        with:
+          fail-on-severity: high
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run npm audit for production dependencies (HIGH/CRITICAL gate)
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high --json > npm-audit-report.json
+          AUDIT_EXIT=$?
+          set -e
+          if [ "$AUDIT_EXIT" -ne 0 ]; then
+            echo "::error::npm audit detectó vulnerabilidades HIGH o CRITICAL en dependencias de producción."
+            exit "$AUDIT_EXIT"
+          fi
+
+      - name: Determine Snyk SCA gate for Dependabot PRs
+        id: snyk-gate
+        env:
+          ACTOR: ${{ github.actor }}
+          HAS_TOKEN: ${{ secrets.SNYK_TOKEN != '' }}
+        run: |
+          if [ "$ACTOR" = "dependabot[bot]" ] && [ "$HAS_TOKEN" != "true" ]; then
+            echo "::warning::SNYK_TOKEN no está disponible para dependabot[bot]; se omite Snyk SCA y se mantienen Dependency Review y npm audit."
+            echo "run_snyk=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_snyk=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Snyk Open Source SCA
+        if: steps.snyk-gate.outputs.run_snyk == 'true'
+        uses: snyk/actions/node@11b673cfb4b0dc0d860a1323caa199d54950dcce # master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --sarif-file-output=snyk-sca.sarif
+
+      - name: Upload Snyk SCA SARIF to GitHub Security
+        if: always() && steps.snyk-gate.outputs.run_snyk == 'true' && hashFiles('snyk-sca.sarif') != ''
+        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
+        with:
+          sarif_file: snyk-sca.sarif
+          category: snyk-sca
+
+      - name: Upload SCA reports artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dev-sca-secrets-reports
+          path: |
+            npm-audit-report.json
+            snyk-sca.sarif
+          retention-days: 14
+          if-no-files-found: warn

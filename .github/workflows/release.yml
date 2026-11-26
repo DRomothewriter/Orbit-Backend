@@ -1,0 +1,337 @@
+name: Release, Supply Chain Security & Production Deploy
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'SemVer tag to build and release (e.g. v1.0.1)'
+        required: true
+        type: string
+      deploy_to_production:
+        description: 'Deploy signed image to EC2 production after manual approval'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: orbit-backend-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-sign-attest:
+    name: Build, Sign (Cosign), Attest & Push ECR
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
+      packages: read
+    outputs:
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      target_sha: ${{ steps.meta.outputs.target_sha }}
+      image_ref: ${{ steps.image-ref.outputs.image_ref }}
+      image_digest: ${{ steps.build-push.outputs.digest }}
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify commit belongs to origin/main and validate SemVer tag
+        id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG_EVENT: ${{ github.event.release.tag_name }}
+          RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
+        run: |
+          if [ "$EVENT_NAME" = "release" ]; then
+            TAG="$RELEASE_TAG_EVENT"
+          else
+            TAG="$RELEASE_TAG_INPUT"
+          fi
+
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag inválido '$TAG'. Debe cumplir el formato SemVer ^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"
+            exit 1
+          fi
+
+          git fetch origin main
+          git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          TARGET_SHA="$(git rev-list -n 1 "refs/tags/${TAG}")"
+
+          if ! git merge-base --is-ancestor "$TARGET_SHA" origin/main; then
+            echo "::error::El commit $TARGET_SHA del tag '$TAG' no es ancestro de origin/main."
+            exit 1
+          fi
+
+          git checkout --detach "$TARGET_SHA"
+
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+          role-session-name: GitHubActions-OrbitBackend-${{ github.run_id }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783 # v2
+
+      - name: Compute ECR image reference
+        id: image-ref
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'orbit-backend' }}
+        run: |
+          echo "image_ref=${ECR_REGISTRY}/${ECR_REPOSITORY}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push immutable Docker image to Amazon ECR
+        id: build-push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image-ref.outputs.image_ref }}:${{ steps.meta.outputs.release_tag }}
+            ${{ steps.image-ref.outputs.image_ref }}:${{ steps.meta.outputs.target_sha }}
+            ${{ steps.image-ref.outputs.image_ref }}:latest
+
+      - name: Export image reference output
+        id: finalize-meta
+        env:
+          IMAGE_REF: ${{ steps.image-ref.outputs.image_ref }}
+          IMAGE_DIGEST: ${{ steps.build-push.outputs.digest }}
+        run: |
+          echo "Built and pushed ${IMAGE_REF}@${IMAGE_DIGEST}"
+
+      - name: Generate CycloneDX SBOM with Syft
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ${{ steps.image-ref.outputs.image_ref }}@${{ steps.build-push.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom-cyclonedx-${{ steps.meta.outputs.release_tag }}.json
+
+      - name: Generate SPDX SBOM with Syft
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ${{ steps.image-ref.outputs.image_ref }}@${{ steps.build-push.outputs.digest }}
+          format: spdx-json
+          output-file: sbom-spdx-${{ steps.meta.outputs.release_tag }}.json
+
+      - name: Grype pre-signing vulnerability gate (HIGH/CRITICAL)
+        id: grype-release
+        uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6
+        with:
+          image: ${{ steps.image-ref.outputs.image_ref }}@${{ steps.build-push.outputs.digest }}
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: json
+
+      - name: Save Grype release JSON report
+        if: always()
+        env:
+          GRYPE_JSON: ${{ steps.grype-release.outputs.json }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+        run: |
+          if [ -n "$GRYPE_JSON" ] && [ -f "$GRYPE_JSON" ]; then
+            cp "$GRYPE_JSON" "grype-release-${RELEASE_TAG}.json"
+          fi
+
+      - name: Upload Grype & SBOM failure reports
+        if: failure() && steps.grype-release.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-grype-failure-${{ steps.meta.outputs.release_tag }}
+          path: |
+            sbom-cyclonedx-${{ steps.meta.outputs.release_tag }}.json
+            sbom-spdx-${{ steps.meta.outputs.release_tag }}.json
+            grype-release-${{ steps.meta.outputs.release_tag }}.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Sign image and attest SBOM with Cosign Keyless (OIDC)
+        env:
+          IMAGE_REF: ${{ steps.image-ref.outputs.image_ref }}
+          IMAGE_DIGEST: ${{ steps.build-push.outputs.digest }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          IMAGE_URI="${IMAGE_REF}@${IMAGE_DIGEST}"
+          cosign sign --yes "$IMAGE_URI"
+          cosign attest --yes \
+            --predicate "sbom-cyclonedx-${RELEASE_TAG}.json" \
+            --type cyclonedx \
+            "$IMAGE_URI"
+          cosign verify "$IMAGE_URI" \
+            --certificate-identity-regexp="^https://github\.com/${REPO}/\.github/workflows/release\.yml@refs/.*$" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            > "cosign-verify-${RELEASE_TAG}.json"
+
+      - name: Generate GitHub Build Provenance Attestation (SLSA)
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-name: ${{ steps.image-ref.outputs.image_ref }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate GitHub SBOM Attestation
+        uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v2
+        with:
+          subject-name: ${{ steps.image-ref.outputs.image_ref }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          sbom-path: sbom-cyclonedx-${{ steps.meta.outputs.release_tag }}.json
+          push-to-registry: true
+
+      - name: Generate SHA256SUMS.txt for supply-chain bundle
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+        run: |
+          sha256sum \
+            "sbom-cyclonedx-${RELEASE_TAG}.json" \
+            "sbom-spdx-${RELEASE_TAG}.json" \
+            "grype-release-${RELEASE_TAG}.json" \
+            "cosign-verify-${RELEASE_TAG}.json" > SHA256SUMS.txt
+
+      - name: Upload 90-day supply-chain bundle artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-supply-chain-bundle-${{ steps.meta.outputs.release_tag }}
+          path: |
+            sbom-cyclonedx-${{ steps.meta.outputs.release_tag }}.json
+            sbom-spdx-${{ steps.meta.outputs.release_tag }}.json
+            grype-release-${{ steps.meta.outputs.release_tag }}.json
+            cosign-verify-${{ steps.meta.outputs.release_tag }}.json
+            SHA256SUMS.txt
+          retention-days: 90
+
+      - name: Attach supply-chain assets to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            "sbom-cyclonedx-${RELEASE_TAG}.json" \
+            "sbom-spdx-${RELEASE_TAG}.json" \
+            "grype-release-${RELEASE_TAG}.json" \
+            "cosign-verify-${RELEASE_TAG}.json" \
+            SHA256SUMS.txt \
+            --clobber
+
+  deploy-production:
+    name: Deploy to EC2 Production (Manual Approval)
+    needs: build-sign-attest
+    if: github.event_name == 'release' || inputs.deploy_to_production == true
+    environment: production
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+          role-session-name: GitHubActions-OrbitBackend-${{ github.run_id }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783 # v2
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Pre-deploy Cosign Keyless verification on exact digest
+        env:
+          IMAGE_REF: ${{ needs.build-sign-attest.outputs.image_ref }}
+          IMAGE_DIGEST: ${{ needs.build-sign-attest.outputs.image_digest }}
+          REPO: ${{ github.repository }}
+        run: |
+          IMAGE_URI="${IMAGE_REF}@${IMAGE_DIGEST}"
+          echo "Verifying cryptographic signature for ${IMAGE_URI}..."
+          cosign verify "$IMAGE_URI" \
+            --certificate-identity-regexp="^https://github\.com/${REPO}/\.github/workflows/release\.yml@refs/.*$" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+
+      - name: Deploy to EC2 via AWS SSM Run Command
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          RELEASE_TAG: ${{ needs.build-sign-attest.outputs.release_tag }}
+          DEPLOY_SHA: ${{ needs.build-sign-attest.outputs.target_sha }}
+        run: |
+          echo "Triggering deployment on EC2 instance $INSTANCE_ID for release $RELEASE_TAG via AWS SSM..."
+          COMMENT=$(printf 'Deploy Orbit Backend %s (%s)' "$RELEASE_TAG" "${DEPLOY_SHA:0:12}" | cut -c1-100)
+
+          COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "$COMMENT" \
+            --parameters "commands=[
+              \"set -e\",
+              \"cd /opt/orbit\",
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+              \"docker compose -f docker-compose.prod.yml pull backend\",
+              \"docker compose -f docker-compose.prod.yml up -d --remove-orphans backend\",
+              \"docker compose -f docker-compose.prod.yml ps\",
+              \"docker image prune -f\"
+            ]" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command dispatched successfully. Command ID: $COMMAND_ID"
+          echo "Waiting for command execution to complete on EC2..."
+
+          aws ssm wait command-executed \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" || true
+
+          STATUS=$(aws ssm get-command-invocation \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+
+          echo "Deployment Status: $STATUS"
+
+          echo "=== Execution Output ==="
+          aws ssm get-command-invocation \
+            --region "$AWS_REGION" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "=== Execution Error Details ==="
+            aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text
+            exit 1
+          fi
+
+          echo "Orbit Backend release $RELEASE_TAG deployed successfully!"

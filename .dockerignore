@@ -5,3 +5,12 @@ coverage
 .env
 .env.*
 Dockerfile
+.github
+.zap
+tests
+scripts
+*.md
+jest.config.js
+.coderabbit.yaml
+sonar-project.properties
+*.log
