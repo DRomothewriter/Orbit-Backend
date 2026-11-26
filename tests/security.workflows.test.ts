@@ -510,6 +510,7 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
     expect(runScript).toMatch(/(?:-e|--env)\s+["']?HOME=(\/tmp|\/zap\/wrk)["']?(?:\s|\\|$)/);
     expect(runScript).toMatch(/JAVA_TOOL_OPTIONS=["']?-Duser\.home=\/tmp["']?/);
     expect(runScript).toMatch(/-z\s+["']-dir \/tmp\/\.ZAP["']/);
+    expect(runScript).toMatch(/(?:-w|--workdir)\s+\/tmp\b/);
   });
 
   test('Job "DAST - OWASP ZAP API Scan" validates /swagger.json via temp file without piping curl into node', () => {
