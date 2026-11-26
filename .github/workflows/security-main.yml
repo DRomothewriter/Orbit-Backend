@@ -43,10 +43,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: 'npm'
@@ -58,7 +58,7 @@ jobs:
         run: npm run test:ci
 
       - name: Upload test coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-coverage-lcov
           path: |
@@ -76,18 +76,18 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository with full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: test-coverage-lcov
           path: coverage
 
       - name: SonarCloud Scan & Quality Gate
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -105,19 +105,19 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           languages: javascript-typescript
           queries: security-extended
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           category: '/language:javascript-typescript'
 
@@ -129,18 +129,18 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies and Snyk CLI
         run: |
-          npm ci
-          npm install -g snyk
+          npm ci --ignore-scripts
+          npm install -g snyk@1.1309.0
 
       - name: Run Snyk Code (SAST)
         id: snyk-code
@@ -161,21 +161,21 @@ jobs:
 
       - name: Upload Snyk Code SARIF to GitHub Security
         if: always() && hashFiles('snyk-code.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           sarif_file: snyk-code.sarif
           category: snyk-code
 
       - name: Upload Snyk Container SARIF to GitHub Security
         if: always() && hashFiles('snyk-container.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           sarif_file: snyk-container.sarif
           category: snyk-container
 
       - name: Upload Snyk reports artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sast-snyk-reports
           path: |
@@ -198,11 +198,11 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Lint Dockerfile with Hadolint
         id: hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         with:
           dockerfile: Dockerfile
           format: sarif
@@ -214,14 +214,14 @@ jobs:
         run: docker build -t orbit-backend:ci-scan .
 
       - name: Generate CycloneDX SBOM with Syft
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           image: orbit-backend:ci-scan
           format: cyclonedx-json
           output-file: sbom-cyclonedx.json
 
       - name: Generate SPDX SBOM with Syft
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           image: orbit-backend:ci-scan
           format: spdx-json
@@ -229,7 +229,7 @@ jobs:
 
       - name: Scan image with Grype (HIGH/CRITICAL gate, SARIF)
         id: grype-sarif
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6
         with:
           image: orbit-backend:ci-scan
           fail-build: true
@@ -240,7 +240,7 @@ jobs:
       - name: Export Grype JSON report
         id: grype-json
         if: always() && steps.build-image.outcome == 'success'
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6
         with:
           image: orbit-backend:ci-scan
           fail-build: true
@@ -263,21 +263,21 @@ jobs:
 
       - name: Upload Hadolint SARIF to GitHub Security
         if: always() && hashFiles('hadolint-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           sarif_file: hadolint-report.sarif
           category: hadolint
 
       - name: Upload Grype SARIF to GitHub Security
         if: always() && hashFiles('grype-results.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
         with:
           sarif_file: grype-results.sarif
           category: grype
 
       - name: Upload SBOM, Hadolint & Grype reports artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sbom-and-grype-reports
           path: |
@@ -307,10 +307,10 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: 'npm'
@@ -358,9 +358,10 @@ jobs:
             sleep 2
           done
 
-          curl -fsS http://127.0.0.1:3000/swagger.json | node -e "
+          curl -fsS http://127.0.0.1:3000/swagger.json -o /tmp/swagger.json
+          node -e "
             const fs = require('fs');
-            const doc = JSON.parse(fs.readFileSync(0, 'utf8'));
+            const doc = JSON.parse(fs.readFileSync('/tmp/swagger.json', 'utf8'));
             if (!doc.openapi || !doc.paths || Object.keys(doc.paths).length === 0) {
               throw new Error('Invalid OpenAPI document on /swagger.json');
             }
@@ -375,12 +376,15 @@ jobs:
           docker run --rm --network host \
             -u "$(id -u):$(id -g)" \
             -e HOME=/tmp \
+            -e JAVA_TOOL_OPTIONS="-Duser.home=/tmp" \
             -v "${WORKSPACE_DIR}:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-api-scan.py \
             -t http://127.0.0.1:3000/swagger.json \
             -f openapi \
             -c .zap/rules.tsv \
+            -d \
+            -z "-dir /tmp/.ZAP" \
             -x zap-report.xml \
             -r zap-report.html \
             -w zap-report.md
@@ -412,7 +416,7 @@ jobs:
 
       - name: Upload OWASP ZAP reports (XML, HTML, MD)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dast-owasp-zap-xml
           path: |

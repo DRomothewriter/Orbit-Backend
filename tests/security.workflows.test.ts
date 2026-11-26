@@ -139,7 +139,7 @@ describe('Workflow 1: CI Dev (.github/workflows/ci-dev.yml)', () => {
     const serialized = JSON.stringify(job);
 
     const depReviewStep = steps.find((s) =>
-      s.uses?.startsWith('actions/dependency-review-action@v4')
+      s.uses?.startsWith('actions/dependency-review-action@')
     );
     expect(depReviewStep).toBeDefined();
     expect(depReviewStep?.with?.['fail-on-severity']).toBe('high');
@@ -160,7 +160,7 @@ describe('Workflow 1: CI Dev (.github/workflows/ci-dev.yml)', () => {
     const allSteps = Object.values(parsed.jobs ?? {}).flatMap((j) => j.steps ?? []);
     const uploadStep = allSteps.find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         s.with?.name === 'dev-sca-secrets-reports'
     );
     expect(uploadStep).toBeDefined();
@@ -203,7 +203,7 @@ describe('Workflow 1: CI Dev (.github/workflows/ci-dev.yml)', () => {
     const serialized = JSON.stringify(job);
 
     const depReviewStep = steps.find((s) =>
-      s.uses?.startsWith('actions/dependency-review-action@v4')
+      s.uses?.startsWith('actions/dependency-review-action@')
     );
     expect(depReviewStep).toBeDefined();
     expect(depReviewStep?.if).toBeUndefined();
@@ -267,7 +267,7 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
 
     const uploadStep = (job.steps ?? []).find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         s.with?.name === 'test-coverage-lcov'
     );
     expect(uploadStep).toBeDefined();
@@ -312,13 +312,13 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
     const [, job] = entry!;
     const steps = job.steps ?? [];
 
-    const initStep = steps.find((s) => s.uses?.startsWith('github/codeql-action/init@v3'));
+    const initStep = steps.find((s) => s.uses?.startsWith('github/codeql-action/init@'));
     expect(initStep).toBeDefined();
     expect(initStep?.with?.languages).toContain('javascript-typescript');
     expect(initStep?.with?.queries).toContain('security-extended');
 
     const analyzeStep = steps.find((s) =>
-      s.uses?.startsWith('github/codeql-action/analyze@v3')
+      s.uses?.startsWith('github/codeql-action/analyze@')
     );
     expect(analyzeStep).toBeDefined();
   });
@@ -343,7 +343,7 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
 
     const uploadStep = steps.find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         s.with?.name === 'sast-snyk-reports'
     );
     expect(uploadStep).toBeDefined();
@@ -375,7 +375,7 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
 
     const uploadStep = steps.find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         s.with?.name === 'sbom-and-grype-reports'
     );
     expect(uploadStep).toBeDefined();
@@ -404,7 +404,7 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
 
     const uploadStep = (job.steps ?? []).find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         s.with?.name === 'dast-owasp-zap-xml'
     );
     expect(uploadStep).toBeDefined();
@@ -508,6 +508,35 @@ describe('Workflow 2: Security Main (.github/workflows/security-main.yml)', () =
     const runScript = normalizeWs(zapStep?.run ?? '');
     expect(runScript).toMatch(/-u\s+["']?\$\(id -u\):\$\(id -g\)["']?/);
     expect(runScript).toMatch(/(?:-e|--env)\s+["']?HOME=(\/tmp|\/zap\/wrk)["']?(?:\s|\\|$)/);
+    expect(runScript).toMatch(/JAVA_TOOL_OPTIONS=["']?-Duser\.home=\/tmp["']?/);
+    expect(runScript).toMatch(/-z\s+["']-dir \/tmp\/\.ZAP["']/);
+  });
+
+  test('Job "DAST - OWASP ZAP API Scan" validates /swagger.json via temp file without piping curl into node', () => {
+    const { parsed } = readYaml<GitHubWorkflow>(workflowRelPath);
+    const entry = findJobByName(parsed, 'DAST - OWASP ZAP API Scan');
+    expect(entry).toBeDefined();
+
+    const [, job] = entry!;
+    const scripts = collectJobScripts(job);
+    expect(scripts).not.toMatch(/curl[^|\n]*\|\s*node/);
+    expect(scripts).toContain('/tmp/swagger.json');
+  });
+
+  test('All GitHub Actions in ci-dev.yml, security-main.yml, and release.yml are pinned to full 40-char commit SHAs', () => {
+    for (const file of [
+      '.github/workflows/ci-dev.yml',
+      '.github/workflows/security-main.yml',
+      '.github/workflows/release.yml',
+    ]) {
+      const { parsed } = readYaml<GitHubWorkflow>(file);
+      const steps = Object.values(parsed.jobs ?? {}).flatMap((j) => j.steps ?? []);
+      const usesSteps = steps.filter((s) => Boolean(s.uses));
+      expect(usesSteps.length).toBeGreaterThan(0);
+      for (const step of usesSteps) {
+        expect(step.uses).toMatch(/@[0-9a-f]{40}$/);
+      }
+    }
   });
 });
 
@@ -697,11 +726,11 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
     expect(content).toMatch(/--method\s+DELETE/);
   });
 
-  test('Dockerfile uses multi-stage node:22-trixie-slim build, strips global npm/yarn in runtime, prunes devDependencies, runs as USER node, and defines dynamic-port HEALTHCHECK', () => {
+  test('Dockerfile uses multi-stage node:22.23.5-alpine3.24 build, strips global npm/yarn in runtime, prunes devDependencies, runs as USER node, and defines dynamic-port HEALTHCHECK', () => {
     const dockerfile = readText('Dockerfile');
 
-    expect(dockerfile).toMatch(/FROM\s+node:22-trixie-slim\s+AS\s+builder/i);
-    expect(dockerfile).toMatch(/FROM\s+node:22-trixie-slim\s+AS\s+runtime/i);
+    expect(dockerfile).toMatch(/FROM\s+node:22\.23\.5-alpine3\.24\s+AS\s+builder/i);
+    expect(dockerfile).toMatch(/FROM\s+node:22\.23\.5-alpine3\.24\s+AS\s+runtime/i);
     expect(dockerfile).toContain('npm prune --omit=dev');
     expect(dockerfile).toContain('/usr/local/lib/node_modules/npm');
     expect(dockerfile).toMatch(/^\s*USER\s+node\s*$/m);
@@ -744,7 +773,7 @@ describe('R3/R4 Security Configs, GitHub Policy Enforcement & Container Hardenin
 
     const failureUploadStep = (buildJob?.steps ?? []).find(
       (s) =>
-        s.uses?.startsWith('actions/upload-artifact@v4') &&
+        s.uses?.startsWith('actions/upload-artifact@') &&
         String(s.if ?? '').includes('grype-release.outcome')
     );
     expect(failureUploadStep).toBeDefined();
