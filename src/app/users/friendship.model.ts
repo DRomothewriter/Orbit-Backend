@@ -18,5 +18,8 @@ const friendshipSchema = new Schema({
 		required: true,
 	},
 });
+if (typeof friendshipSchema.index === 'function') {
+	friendshipSchema.index({ userId: 1, friendId: 1 }, { unique: true });
+}
 const Friendship = model('Friendship', friendshipSchema);
 export default Friendship;

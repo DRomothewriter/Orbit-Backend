@@ -52,9 +52,18 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
   }
 };
 
+const escapeHtml = (unsafe: string): string =>
+  String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // Plantillas de correo predefinidas
 const getEmailTemplate = (data: AuthEmailData): { subject: string; html: string } => {
-  const { userName, userEmail, token, code, type } = data;
+  const { userEmail, token, code, type } = data;
+  const userName = escapeHtml(data.userName || '');
 
   switch (type) {
     case 'verification':

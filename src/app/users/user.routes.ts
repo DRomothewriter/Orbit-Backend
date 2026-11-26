@@ -15,7 +15,7 @@ const router = Router();
  *       200:
  *         description: Lista de usuarios
  */
-router.get('/', userController.getAllUsers);
+router.get('/', authMiddleware, userController.getAllUsers);
 
 /**
  * @swagger

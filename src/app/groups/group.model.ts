@@ -7,7 +7,7 @@ const groupSchema = new Schema(
 		},
 		topic: {
 			type: SchemaTypes.String,
-			require: true,
+			required: true,
 		},
 		description: {
 			type: SchemaTypes.String

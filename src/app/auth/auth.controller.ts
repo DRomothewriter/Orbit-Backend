@@ -9,15 +9,37 @@ import {
 	generateResetToken,
 } from '../middlewares/mail';
 import { OAuth2Client } from 'google-auth-library';
+import {
+	getRandomAstronomicalAvatar,
+	isGoogleHostedAvatar,
+} from '../shared/defaultAvatars';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
+const sanitizeUser = (user: any) => {
+	const obj = typeof user?.toObject === 'function' ? user.toObject() : { ...user };
+	delete obj.password;
+	delete obj.verificationCode;
+	delete obj.resetPasswordToken;
+	delete obj.resetPasswordExpiry;
+	return obj;
+};
+
 export const login = async (req: Request, res: Response) => {
 	const { email, password } = req.body;
+	if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+		return res
+			.status(Status.BAD_REQUEST)
+			.json({ error: 'Email and password are required' });
+	}
 	try {
-		const user = await User.findOne({ email });
-		if (!user)
+		const userQuery = User.findOne({ email });
+		const user =
+			userQuery && typeof (userQuery as any).select === 'function'
+				? await (userQuery as any).select('+password')
+				: await userQuery;
+		if (!user || !user.password)
 			return res
 				.status(Status.UNAUTHORIZED)
 				.json({ error: 'Invalid credentials' });
@@ -38,7 +60,7 @@ export const login = async (req: Request, res: Response) => {
 			process.env.JWT_SECRET,
 			{ expiresIn: '24h' }
 		);
-		return res.status(Status.SUCCESS).json({ token: token, user: user });
+		return res.status(Status.SUCCESS).json({ token: token, user: sanitizeUser(user) });
 	} catch (e) {
 		return res
 			.status(Status.INTERNAL_ERROR)
@@ -60,18 +82,22 @@ export const google = async (req: Request, res: Response) => {
 			user = await User.create({
 				email: payload?.email,
 				username: payload?.name,
-				profileImgUrl: payload?.picture,
+				profileImgUrl: getRandomAstronomicalAvatar(),
 				isVerified: true,
-				//authProvider: 'google' | 'github' //Esto lo necesitaremos en el futuro
 			});
 		} else {
+			let shouldSave = false;
 			if (!user.isVerified) {
 				user.isVerified = true;
-				await user.save();
+				shouldSave = true;
 			}
 
-			if (!user.profileImgUrl && payload?.picture) {
-				user.profileImgUrl = payload?.picture;
+			if (!user.profileImgUrl || isGoogleHostedAvatar(user.profileImgUrl)) {
+				user.profileImgUrl = getRandomAstronomicalAvatar();
+				shouldSave = true;
+			}
+
+			if (shouldSave) {
 				await user.save();
 			}
 		}
@@ -81,7 +107,7 @@ export const google = async (req: Request, res: Response) => {
 			process.env.JWT_SECRET,
 			{ expiresIn: '1d' }
 		);
-		return res.status(Status.SUCCESS).json({ token, user });
+		return res.status(Status.SUCCESS).json({ token, user: sanitizeUser(user) });
 	} catch (err) {
 		console.error('[Google Auth Error]:', err);
 		return res
@@ -103,6 +129,7 @@ export const signup = async (req: Request, res: Response) => {
 			username: name,
 			email,
 			password: hashedPassword,
+			profileImgUrl: getRandomAstronomicalAvatar(),
 			verificationCode,
 			isVerified: false,
 		});
@@ -139,6 +166,11 @@ export const signup = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
 	const { email, code } = req.body;
+	if (typeof email !== 'string' || typeof code !== 'string' || !email || !code) {
+		return res
+			.status(Status.BAD_REQUEST)
+			.json({ error: 'Email y código válidos son requeridos' });
+	}
 	try {
 		const user = await User.findOne({ email, verificationCode: code });
 		if (!user) {
@@ -204,6 +236,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 export const resetPassword = async (req: Request, res: Response) => {
 	const { token, newPassword } = req.body;
+	if (
+		typeof token !== 'string' ||
+		typeof newPassword !== 'string' ||
+		!token ||
+		newPassword.length < 8
+	) {
+		return res.status(Status.BAD_REQUEST).json({
+			error: 'Token válido y contraseña de al menos 8 caracteres son requeridos',
+		});
+	}
 	try {
 		const user = await User.findOne({
 			resetPasswordToken: token,

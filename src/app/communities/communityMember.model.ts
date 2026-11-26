@@ -18,6 +18,9 @@ const communityMemberSchema = new Schema({
 		required: true,
 	},
 });
+if (typeof communityMemberSchema.index === 'function') {
+	communityMemberSchema.index({ userId: 1, communityId: 1 }, { unique: true });
+}
 
 const CommunityMember = model('CommunityMember', communityMemberSchema);
 export default CommunityMember;
