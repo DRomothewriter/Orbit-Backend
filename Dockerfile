@@ -9,7 +9,7 @@ ENV CXXFLAGS="-include cstdint"
 
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts \
-    && node node_modules/mediasoup/npm-scripts.mjs postinstall
+    && (cd node_modules/mediasoup && node npm-scripts.mjs postinstall)
 
 COPY tsconfig.json swagger.config.ts ./
 COPY src ./src

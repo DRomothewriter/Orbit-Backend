@@ -319,7 +319,7 @@ jobs:
       - name: Install dependencies and build application
         run: |
           npm ci --ignore-scripts
-          node node_modules/mediasoup/npm-scripts.mjs postinstall
+          (cd node_modules/mediasoup && node npm-scripts.mjs postinstall)
           npm run build
 
       - name: Start ephemeral Orbit Backend and verify /health & /swagger.json
