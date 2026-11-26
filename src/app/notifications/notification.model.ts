@@ -39,6 +39,9 @@ const notificationSchema = new Schema(
 	},
 	{ timestamps: true }
 );
+if (typeof notificationSchema.index === 'function') {
+	notificationSchema.index({ receiverId: 1, seen: 1 });
+}
 
 const Notification = model('Notification', notificationSchema);
 export default Notification;

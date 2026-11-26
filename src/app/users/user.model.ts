@@ -12,6 +12,7 @@ const userSchema = new Schema({
     },
     password: {
         type: SchemaTypes.String,
+        select: false,
     },
     profileImgUrl: {
         type: SchemaTypes.String
@@ -27,14 +28,17 @@ const userSchema = new Schema({
         default: false
     },
     verificationCode: {
-        type: SchemaTypes.String
+        type: SchemaTypes.String,
+        select: false,
     },
     // Campos para recuperación de contraseña
     resetPasswordToken: {
-        type: SchemaTypes.String
+        type: SchemaTypes.String,
+        select: false,
     },
     resetPasswordExpiry: {
-        type: SchemaTypes.Date
+        type: SchemaTypes.Date,
+        select: false,
     }
 },{timestamps: true})
 

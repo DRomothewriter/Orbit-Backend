@@ -5,28 +5,29 @@ import { Request, Response } from 'express';
 import Status from '../interfaces/Status';
 import { notifyUser } from '../notifications/notification.service';
 import { getGroupMembers } from '../groups/group.service';
-import { IGroupMember } from '../groups/groupMember.model';
+import GroupMember, { IGroupMember } from '../groups/groupMember.model';
+import Group from '../groups/group.model';
 import { NotificationType } from '../notifications/notification.model';
+import { resolveUploadedFileUrl } from '../middlewares/s3';
 
 export const getGroupMessages = async (req: Request, res: Response) => {
 	const { groupId } = req.params;
-	const page: number = parseInt(req.query.page as string, 10) || 1;
+	const userId = req.user?.id;
+	const page: number = Math.max(1, parseInt(req.query.page as string, 10) || 1);
 	const pageSize = 100;
 	try {
-		//Revisar antes que sea miembro del grupo. Con middleware tal vez
-		const groupMessages = await Message.find({ groupId: groupId })
-			.sort({ createdAt: 1 })
+		const latestMessages = await Message.find({ groupId: groupId })
+			.sort({ createdAt: -1 })
 			.skip((page - 1) * pageSize)
 			.limit(pageSize)
 			.lean();
-		/*
-		const messagesWithReactions = await Promise.all(
-			groupMessages.map(async (msg) => {
-				const reactions = await Reaction.find({ messageId: msg._id }).lean();
-				return { ...msg, reactions };
-			})
-		);
-		*/
+		if (userId && page === 1) {
+			await GroupMember.findOneAndUpdate(
+				{ groupId, userId },
+				{ lastReadAt: new Date() }
+			);
+		}
+		const groupMessages = latestMessages.reverse();
 		return res.status(Status.SUCCESS).json(groupMessages);
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -35,10 +36,18 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 
 export const getMessageById = async (req: Request, res: Response) => {
 	const messageId = req.params.messageId;
+	const userId = req.user.id;
 	try {
 		const message = await Message.findById(messageId);
 		if (!message)
 			return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
+		const membership = await GroupMember.findOne({
+			userId,
+			groupId: message.groupId,
+		});
+		if (!membership) {
+			return res.status(Status.FORBIDDEN).json({ error: 'Forbidden' });
+		}
 		return res.status(Status.SUCCESS).json({ message: message });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -48,12 +57,20 @@ export const getMessageById = async (req: Request, res: Response) => {
 export const createMessage = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	const incomingMessage = req.body.message ?? req.body ?? {};
-	const { type, text, groupId, username } = incomingMessage;
+	const { type, text, groupId, username, eventData } = incomingMessage;
 	const io = req.app.get('io');
 	try {
-		const newMessage = new Message({ type, text, groupId, userId, username });
+		const newMessage = new Message({
+			type,
+			text,
+			groupId,
+			userId,
+			username,
+			...(eventData ? { eventData } : {}),
+		});
 		await newMessage.save();
 		const messageId = newMessage._id;
+		await Group.findByIdAndUpdate(groupId, { lastMessage: messageId });
 
 		//socket
 		io.to(`${groupId}`).emit('message', newMessage);
@@ -70,7 +87,8 @@ export const createMessage = async (req: Request, res: Response) => {
 					io
 				);
 			})
-		);
+		).catch((err) => console.error('Error notifying group members:', err));
+
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
@@ -92,10 +110,11 @@ export const createImageMessage = async (req: Request, res: Response) => {
 	}
 
 	try {
+		const imageUrl = resolveUploadedFileUrl(req, file);
 		const newMessage = new Message({
 			type: 'image',
 			text: text || '',
-			imageUrl: file.location, // URL de S3
+			imageUrl,
 			groupId,
 			userId,
 			username,
@@ -103,6 +122,7 @@ export const createImageMessage = async (req: Request, res: Response) => {
 
 		await newMessage.save();
 		const messageId = newMessage._id;
+		await Group.findByIdAndUpdate(groupId, { lastMessage: messageId });
 
 		// Socket
 		io.to(`${groupId}`).emit('message', newMessage);
@@ -119,7 +139,8 @@ export const createImageMessage = async (req: Request, res: Response) => {
 					io
 				);
 			})
-		);
+		).catch((err) => console.error('Error notifying image message:', err));
+
 		return res
 			.status(Status.CREATED)
 			.json({ newMessage: newMessage, messageId: messageId });
@@ -156,16 +177,19 @@ export const createReaction = async (req: Request, res: Response) => {
 
 export const updateMessage = async (req: Request, res: Response) => {
 	const messageId = req.params.messageId;
+	const userId = req.user.id;
+	const { text } = req.body;
 	try {
+		const existing = await Message.findById(messageId);
+		if (!existing)
+			return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
+		if (existing.userId.toString() !== userId.toString())
+			return res.status(Status.FORBIDDEN).json({ error: 'Forbidden' });
 		const updatedMessage = await Message.findByIdAndUpdate(
 			messageId,
-			req.body,
-			{
-				new: true,
-			}
+			{ text },
+			{ new: true }
 		);
-		if (!updatedMessage)
-			return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
 		return res.status(Status.SUCCESS).json({ updatedMessage: updatedMessage });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -174,10 +198,14 @@ export const updateMessage = async (req: Request, res: Response) => {
 
 export const deleteMessage = async (req: Request, res: Response) => {
 	const messageId = req.params.messageId;
+	const userId = req.user.id;
 	try {
-		const deletedMessage = await Message.findByIdAndDelete(messageId);
-		if (!deletedMessage)
+		const existing = await Message.findById(messageId);
+		if (!existing)
 			return res.status(Status.NOT_FOUND).json({ error: 'Message not found' });
+		if (existing.userId.toString() !== userId.toString())
+			return res.status(Status.FORBIDDEN).json({ error: 'Forbidden' });
+		const deletedMessage = await Message.findByIdAndDelete(messageId);
 		return res.status(Status.SUCCESS).json({ deletedMessage: deletedMessage });
 	} catch (e) {
 		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
@@ -186,12 +214,16 @@ export const deleteMessage = async (req: Request, res: Response) => {
 
 export const deleteReaction = async (req: Request, res: Response) => {
 	const reactionId = req.params.reactionId;
+	const userId = req.user.id;
 	try {
-		const deletedReaction = await Reaction.findByIdAndDelete(reactionId);
-		if (!deletedReaction)
+		const existing = await Reaction.findById(reactionId);
+		if (!existing)
 			return res.status(Status.NOT_FOUND).json({ error: 'Reaction not found' });
+		if (existing.userId.toString() !== userId.toString())
+			return res.status(Status.FORBIDDEN).json({ error: 'Forbidden' });
+		const deletedReaction = await Reaction.findByIdAndDelete(reactionId);
 		const updatedMessage = await Message.findByIdAndUpdate(
-			deletedReaction.messageId,
+			existing.messageId,
 			{ $inc: { reactionCount: -1 } },
 			{ new: true }
 		);
@@ -199,5 +231,7 @@ export const deleteReaction = async (req: Request, res: Response) => {
 			deletedReaction: deletedReaction,
 			updatedMessage: updatedMessage,
 		});
-	} catch (e) {}
+	} catch (e) {
+		return res.status(Status.INTERNAL_ERROR).json({ error: 'Server error', e });
+	}
 };

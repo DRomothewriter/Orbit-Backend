@@ -98,7 +98,7 @@ router.post('/', authMiddleware, isGroupMember, messageController.createMessage)
  *       201:
  *         description: Mensaje con imagen creado
  */
-router.post('/image', authMiddleware, isGroupMember, uploadS3.single('image'), messageController.createImageMessage);
+router.post('/image', authMiddleware, uploadS3.single('image'), isGroupMember, messageController.createImageMessage);
 
 /**
  * @swagger

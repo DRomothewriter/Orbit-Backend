@@ -17,7 +17,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     }
     const token = authHeader.split(' ')[1]; //tomamos el token
     if(!token){
-        return res.status(Status.UNAUTHORIZED);
+        return res.status(Status.UNAUTHORIZED).json({error: "No token"});
     }
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string)as IUser;

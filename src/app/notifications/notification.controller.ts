@@ -28,10 +28,6 @@ export const getUnseen = async (req: Request, res: Response) => {
 			receiverId: userId,
 			seen: false,
 		});
-		if (myUnseenNotifications.length === 0)
-			return res
-				.status(Status.SUCCESS)
-				.json({ message: "You've seen all your notifications" });
 		return res.status(Status.SUCCESS).json(myUnseenNotifications);
 	} catch (e) {
 		return res
@@ -44,10 +40,7 @@ export const getAllMyNotifications = async (req: Request, res: Response) => {
 	const userId = req.user.id;
 	try {
 		const myNotifications = await Notification.find({ receiverId: userId });
-		if (myNotifications.length === 0)
-			return res
-				.status(Status.SUCCESS)
-				.json({ message: "You don't have notifications" });
+		return res.status(Status.SUCCESS).json(myNotifications);
 	} catch (e) {
 		return res
 			.status(Status.INTERNAL_ERROR)
@@ -56,11 +49,15 @@ export const getAllMyNotifications = async (req: Request, res: Response) => {
 };
 
 export const updateToSeen = async (req: Request, res: Response) => {
-	const { notificationIds } = req.body;
+	const userId = req.user.id;
+	const ids = req.body.notificationsIds ?? req.body.notificationIds;
+	if (!Array.isArray(ids) || ids.length === 0) {
+		return res.status(Status.SUCCESS).json({ modifiedCount: 0 });
+	}
 	try {
 		const notifications = await Notification.updateMany(
-			{_id: { $in: notificationIds }}
-			,{$set: {seen:true}}
+			{ _id: { $in: ids }, receiverId: userId },
+			{ $set: { seen: true } }
 		);
 		return res.status(Status.SUCCESS).json(notifications);
 	} catch (e) {
@@ -72,10 +69,12 @@ export const updateToSeen = async (req: Request, res: Response) => {
 
 export const deleteNotification = async (req: Request, res: Response) => {
 	const notificationId = req.params.notificationId;
+	const userId = req.user.id;
 	try {
-		const deletedNotification = await Notification.findByIdAndDelete(
-			notificationId
-		);
+		const deletedNotification = await Notification.findOneAndDelete({
+			_id: notificationId,
+			receiverId: userId,
+		});
 		if (!deletedNotification)
 			return res
 				.status(Status.NOT_FOUND)

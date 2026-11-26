@@ -3,7 +3,7 @@ const messageSchema = new Schema(
 	{
 		type: {
 			type: SchemaTypes.String,
-			enum: ['text', 'image', 'voice', 'video', 'emoji', 'multimedia'],
+			enum: ['text', 'image', 'voice', 'video', 'emoji', 'multimedia', 'event'],
 			required: true,
 		},
         text: {
@@ -17,6 +17,11 @@ const messageSchema = new Schema(
             required: function(this: any) {
                 return this.type === 'image';
             },
+        },
+        eventData: {
+            title: { type: String },
+            date: { type: String },
+            participants: [{ type: String }],
         },
 		groupId: {
 			type: SchemaTypes.ObjectId,
@@ -36,5 +41,8 @@ const messageSchema = new Schema(
 	},
 	{ timestamps: true }
 );
+if (typeof messageSchema.index === 'function') {
+	messageSchema.index({ groupId: 1, createdAt: -1 });
+}
 const Message = model('Message', messageSchema);
 export default Message;

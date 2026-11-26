@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import Community from './community.model';
 import CommunityMember from './communityMember.model';
+import Group from '../groups/group.model';
+import GroupMember from '../groups/groupMember.model';
+import Message from '../messages/message.model';
 import Status from '../interfaces/Status';
+import { getRandomAstronomicalAvatar } from '../shared/defaultAvatars';
 
 export const getMyCommunities = async (req: Request, res: Response) => {
 	const userId = req.user.id;
@@ -16,7 +20,6 @@ export const getMyCommunities = async (req: Request, res: Response) => {
 };
 export const getCommunityMembers = async (req: Request, res: Response) => {
 	const communityId = req.params.communityId;
-	const userId = req.user.id;
 	try{
 		const communtiyMembers = await CommunityMember.find({communityId}).populate('userId')
 		return res.status(Status.SUCCESS).json(communtiyMembers);
@@ -25,7 +28,7 @@ export const getCommunityMembers = async (req: Request, res: Response) => {
 	}
 };
 export const getCommunityById = async (req: Request, res: Response) => {
-	const communityId = req.params.CommunityId;
+	const communityId = req.params.communityId;
 	try {
 		const community = await Community.findById(communityId);
 		return res.status(Status.SUCCESS).json({ community: community });
@@ -44,7 +47,10 @@ export const createCommunity = async (req: Request, res: Response) => {
 	}
 
 	try {
-		const newCommunity = new Community(community);
+		const newCommunity = new Community({
+			...community,
+			communityImgUrl: community.communityImgUrl || getRandomAstronomicalAvatar(),
+		});
 		await newCommunity.save();
 
 		const communityId = newCommunity._id;
@@ -56,14 +62,17 @@ export const createCommunity = async (req: Request, res: Response) => {
 		await newCommunityMember.save();
 
 		// Agregar los miembros iniciales
-		for (const memberId of initialMembersIds) {
-			const newMember = new CommunityMember({
-				userId: memberId,
-				communityId,
-				role: 'member',
-			});
-			await newMember.save();
-			//io.to(newMember.userId).emit('newCommunity')
+		const safeInitialMembers = Array.isArray(initialMembersIds) ? initialMembersIds : [];
+		for (const memberId of safeInitialMembers) {
+			const existing = await CommunityMember.findOne({ userId: memberId, communityId });
+			if (!existing) {
+				const newMember = new CommunityMember({
+					userId: memberId,
+					communityId,
+					role: 'member',
+				});
+				await newMember.save();
+			}
 		}
 		return res.status(Status.CREATED).json(newCommunity);
 	} catch (e) {
@@ -73,10 +82,22 @@ export const createCommunity = async (req: Request, res: Response) => {
 
 export const addCommunityMembers = async (req: Request, res: Response) => {
 	const { communityId, userIds } = req.body;
+	if (!communityId || !Array.isArray(userIds)) {
+		return res.status(Status.BAD_REQUEST).json({ error: 'communityId and userIds array are required' });
+	}
 	try {
 		const communityMembers = [];
 		for (const userId of userIds) {
-			const communityMember = new CommunityMember({ communityId, userId });
+			const existing = await CommunityMember.findOne({ communityId, userId });
+			if (existing) {
+				communityMembers.push(existing);
+				continue;
+			}
+			const communityMember = new CommunityMember({
+				communityId,
+				userId,
+				role: 'member',
+			});
 			await communityMember.save();
 			communityMembers.push(communityMember);
 		}
@@ -110,6 +131,13 @@ export const deleteCommunity = async (req: Request, res: Response) => {
 		const deletedCommunityMembers = await CommunityMember.deleteMany({
 			communityId: communityId,
 		});
+		const communityGroups = await Group.find({ communityId });
+		const groupIds = communityGroups.map((g) => g._id);
+		if (groupIds.length > 0) {
+			await GroupMember.deleteMany({ groupId: { $in: groupIds } });
+			await Message.deleteMany({ groupId: { $in: groupIds } });
+			await Group.deleteMany({ _id: { $in: groupIds } });
+		}
 		return res.status(Status.SUCCESS).json({
 			deletedCommunity: deletedCommunity,
 			deletedCommunityMembers: deletedCommunityMembers,
@@ -120,11 +148,15 @@ export const deleteCommunity = async (req: Request, res: Response) => {
 };
 
 export const deleteCommunityMember = async (req: Request, res: Response) => {
-	const { communityMemberId } = req.params;
+	const { communityId, userId } = req.params;
 	try {
-		const deletedCommunityMember = await CommunityMember.findByIdAndDelete(
-			communityMemberId
-		);
+		const deletedCommunityMember = await CommunityMember.findOneAndDelete({
+			communityId,
+			userId,
+		});
+		if (!deletedCommunityMember) {
+			return res.status(Status.NOT_FOUND).json({ error: 'Community member not found' });
+		}
 		return res
 			.status(Status.SUCCESS)
 			.json({ deletedCommunityMember: deletedCommunityMember });

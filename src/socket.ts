@@ -1,56 +1,95 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import User from './app/users/user.model';
+import Friendship from './app/users/friendship.model';
+import GroupMember from './app/groups/groupMember.model';
 
 import { roomService } from './services/room.service';
 import { mediasoupService } from './services/mediasoup.service';
 import { webRtcTransportOptions } from './config/mediasoup.config';
 import { Peer } from './app/interfaces/call';
 
-export const connectedSockets = [
+export const connectedSockets: Array<{ socketId: string; userId?: string }> = [
 	//username, socketId, userId
 ];
 
+const safeJsonParse = <T>(raw: unknown, fallback: T): T => {
+	if (typeof raw !== 'string' || !raw.trim()) return fallback;
+	try {
+		return JSON.parse(raw) as T;
+	} catch {
+		return fallback;
+	}
+};
+
+const emitStatusToFriends = async (io: Server, userId: string, status: string) => {
+	try {
+		const friendships = await Friendship.find({
+			userId,
+			status: 'accepted',
+		});
+		for (const f of friendships) {
+			io.to(f.friendId.toString()).emit('friend-status-change', {
+				userId,
+				status,
+			});
+		}
+	} catch (err) {
+		console.error('Error emitting friend status change:', err);
+	}
+};
+
 export const setupSocket = (io: Server) => {
-	io.on('connection', (socket) => {
-		const token = socket.handshake.auth.token;
-		//Leemos el token para saber qué usuario es
-		const groupIds = JSON.parse(socket.handshake.query.groupIds as string);
-		const user = JSON.parse(socket.handshake.query.user as string);
-		//En teoría el user ya viene con el userId también
-		let userId: string;
-		if (token) {
+	io.on('connection', async (socket) => {
+		const token = socket.handshake.auth?.token;
+		const groupIds = safeJsonParse<string[]>(socket.handshake.query?.groupIds, []);
+		const user = safeJsonParse<Record<string, any> | null>(
+			socket.handshake.query?.user,
+			null
+		);
+
+		let userId: string | undefined;
+		if (token && process.env.JWT_SECRET) {
 			try {
 				const decoded = jwt.verify(token, process.env.JWT_SECRET);
 				if (typeof decoded !== 'string' && decoded.id) {
-					userId = decoded.id;
+					userId = decoded.id.toString();
 				}
-				//console.log('Usuario conectdado. userId:', userId)
-				socket.data.userId = userId;
-				socket.join(userId);
-				User.findByIdAndUpdate(userId, { status: 'online' }, { new: true })
-					.then((updatedUser) => {
-						//console.log(`User ${userId} status set to online`, updatedUser);
-					})
-					.catch((err) => {
-						console.error('Error setting user online:', err);
-					});
+				if (userId) {
+					socket.data.userId = userId;
+					socket.join(userId);
+					User.findByIdAndUpdate(userId, { status: 'online' }, { new: true })
+						.then(() => emitStatusToFriends(io, userId!, 'online'))
+						.catch((err) => {
+							console.error('Error setting user online:', err);
+						});
 
-				if (user && groupIds) {
-					socket.data.groupIds = groupIds;
-
-					//Le hacemos join a todas las salas con los Ids de sus chats
-					groupIds.forEach((groupId: string) => {
-						socket.join(groupId.toString());
-					});
-					//console.log('Usuario unido a rooms:', user.chatIds)
+					// Unir a los grupos desde BD para garantizar consistencia incluso en reconexiones
+					try {
+						const memberships = await GroupMember.find({ userId });
+						const dbGroupIds = memberships.map((m) => m.groupId.toString());
+						const allGroupIds = Array.from(
+							new Set([
+								...dbGroupIds,
+								...(Array.isArray(groupIds) ? groupIds.map(String) : []),
+							])
+						);
+						socket.data.groupIds = allGroupIds;
+						allGroupIds.forEach((groupId) => socket.join(groupId));
+					} catch (err) {
+						console.error('Error joining user groups on socket connect:', err);
+						if (user && Array.isArray(groupIds)) {
+							socket.data.groupIds = groupIds;
+							groupIds.forEach((groupId: string) => {
+								socket.join(groupId.toString());
+							});
+						}
+					}
 				}
-			} catch (err) {
+			} catch (err: any) {
 				console.log('Token inválido en socket', err.message);
 			}
 		}
-
-		//Tal vez agregar una confiration
 
 		console.log(
 			`Nuevo cliente conectado:${socket.id}. UserId: ${socket.data.userId}`
@@ -61,21 +100,34 @@ export const setupSocket = (io: Server) => {
 			userId: userId,
 		});
 
-		//on.('newGroup') join al nuevo id y agregar a mis groupIds
+		socket.on('status-change', async ({ status }: { status: string }) => {
+			if (!userId || !['online', 'working', 'offline'].includes(status)) return;
+			try {
+				await User.findByIdAndUpdate(userId, { status }, { new: true });
+				await emitStatusToFriends(io, userId, status);
+			} catch (err) {
+				console.error('Error updating status via socket:', err);
+			}
+		});
 
 		socket.on('disconnect', () => {
-			User.findByIdAndUpdate(userId, { status: 'offline' }, { new: true })
-				.then((updatedUser) => {
-					//console.log(`User ${userId} status set to offline`, updatedUser);
-				})
-				.catch((err) => {
-					console.error('Error setting user online:', err);
-				});
-
 			console.log('User disconnected:', socket.id);
 			const index = connectedSockets.findIndex((s) => s.socketId === socket.id);
 			if (index !== -1) {
 				connectedSockets.splice(index, 1);
+			}
+
+			if (userId) {
+				const stillConnected = connectedSockets.some(
+					(s) => s.userId?.toString() === userId
+				);
+				if (!stillConnected) {
+					User.findByIdAndUpdate(userId, { status: 'offline' }, { new: true })
+						.then(() => emitStatusToFriends(io, userId!, 'offline'))
+						.catch((err) => {
+							console.error('Error setting user offline:', err);
+						});
+				}
 			}
 
 			//limpiar llamadas
@@ -99,6 +151,19 @@ export const setupSocket = (io: Server) => {
 		// 1. Unirse a una sala de videollamada
 		socket.on('joinCallRoom', async ({ roomId, peerId, group }) => {
 			try {
+				if (!socket.data.userId) {
+					socket.emit('callError', { message: 'Usuario no autenticado' });
+					return;
+				}
+				const membership = await GroupMember.findOne({
+					userId: socket.data.userId,
+					groupId: roomId,
+				});
+				if (!membership) {
+					socket.emit('callError', { message: 'No perteneces a este grupo' });
+					return;
+				}
+
 				console.log(`[Call] ${peerId} uniéndose a sala ${roomId}`);
 
 				const room = await roomService.getOrCreateRoom(roomId, socket, group);
@@ -115,8 +180,10 @@ export const setupSocket = (io: Server) => {
 			roomService.addPeer(roomId, peer);
 			socket.join(`call-${roomId}`); // Prefijo para diferenciar de chat rooms
 
-			// Emitir a la sala de chat que la llamada está iniciando
-			socket.to(roomId).emit('call-starting', { group });
+			// Emitir a la sala de chat solo cuando la llamada inicia (primer peer)
+			if (room.peers.size === 1) {
+				socket.to(roomId).emit('call-starting', { group });
+			}
 
 			const rtpCapabilities =
 				mediasoupService.getRouterRtpCapabilities(roomId);				// Obtener información de producers existentes de otros peers

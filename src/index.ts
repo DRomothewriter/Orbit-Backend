@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -61,6 +62,7 @@ const io = new Server(server, {
 app.set('io', io);
 
 app.use(express.json()); //Luego lo pondremos únicamente en las rutas necesarias
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use(routes);
 app.get('', (req, res) => {

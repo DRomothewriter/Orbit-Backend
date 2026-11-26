@@ -19,6 +19,7 @@ router.get('/all-my-groups', authMiddleware, groupcontroller.getAllMyGroups);
  */
 router.get('/my-groups', authMiddleware, groupcontroller.getMyGroups);
 router.get('/my-community-groups/:communityId', authMiddleware, groupcontroller.getMyCommunityGroups);
+router.put('/:groupId/read', authMiddleware, isGroupMember, groupcontroller.markGroupAsRead);
 router.get('/my-group-member/:groupId', authMiddleware, isGroupMember, groupcontroller.getMyGroupMember);
 router.get('/group-members/:groupId', authMiddleware, isGroupMember, groupcontroller.getGroupMembers); //Middleware para revisar que eres miembro del grupo
 /**
